@@ -12,6 +12,7 @@ const PublicView = lazy(() => import('./pages/PublicView'));
 const MediaDownload = lazy(() => import('./pages/MediaDownload'));
 const ShortLinkRedirect = lazy(() => import('./pages/ShortLinkRedirect'));
 const SmartRedirect = lazy(() => import('./pages/SmartRedirect'));
+const PortfolioView = lazy(() => import('./pages/PortfolioView'));
 
 function HomeOrRedirect() {
   const { user, profile, loading } = useAuth();
@@ -68,6 +69,7 @@ export default function App() {
               <Route path="/:username/media/:toolId" element={<MediaDownload />} />
               <Route path="/:username/m/:slug" element={<SmartRedirect />} />
               <Route path="/:username/v/:slug" element={<SmartRedirect />} />
+              <Route path="/:username/wb/:slug" element={<PortfolioView />} />
               <Route path="/:username/:slug" element={<SmartRedirect />} />
             </Routes>
           </Suspense>

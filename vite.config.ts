@@ -27,11 +27,7 @@ export default defineConfig(({mode}) => {
       cssCodeSplit: true,
       rollupOptions: {
         output: {
-          manualChunks: {
-            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-            'supabase': ['@supabase/supabase-js'],
-            'ui-vendor': ['lucide-react', 'motion'],
-          }
+          // Avoiding manual chunks for mission-critical hooks components
         }
       }
     },

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
-import { Shield, UploadCloud, User as UserIcon, Activity, Eye, Users, Plus, Search, Edit, Trash2, X, Image as ImageIcon, Settings, Copy, Lock, Link as LinkIcon, MessageSquare, ChevronRight, ArrowLeft, Palette, LogOut, Megaphone, ExternalLink, Globe, CheckCircle, Youtube, Instagram, Phone, Music2, Share2, Mail, Send, Video, FileText, FileArchive, FileCode } from 'lucide-react';
+import { Shield, UploadCloud, User as UserIcon, Activity, Eye, Users, Plus, Search, Edit, Trash2, X, Image as ImageIcon, Settings, Copy, Lock, Link as LinkIcon, MessageSquare, MessageCircle, ChevronRight, ArrowLeft, Palette, LogOut, Megaphone, ExternalLink, Globe, CheckCircle, Youtube, Instagram, Facebook, Phone, Music2, Share2, Mail, Send, Video, FileText, FileArchive, FileCode } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
 import Cropper from 'react-easy-crop';
 import getCroppedImg from '../utils/cropImage';
@@ -198,6 +198,25 @@ interface ShortLink {
   created_at: string;
 }
 
+interface Portfolio {
+  id: string;
+  profile_id: string;
+  slug: string;
+  title: string;
+  description: string;
+  main_image_url: string;
+  gallery_urls: string[];
+  theme_color: string;
+  quote?: string;
+  views_count: number;
+  created_at: string;
+  social_whatsapp?: string;
+  social_instagram?: string;
+  social_tiktok?: string;
+  social_facebook?: string;
+  whatsapp_greeting?: string;
+}
+
 export default function AdminDashboard() {
   const { username } = useParams();
   const { user, profile, refreshProfile } = useAuth();
@@ -303,6 +322,29 @@ export default function AdminDashboard() {
   const [shortLinkLoading, setShortLinkLoading] = useState(false);
   const [stayInModal, setStayInModal] = useState(false);
 
+  // Portfolio State
+  const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
+  const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
+  const [editingPortfolio, setEditingPortfolio] = useState<Portfolio | null>(null);
+  const [portfolioForm, setPortfolioForm] = useState({
+    slug: '',
+    title: '',
+    description: '',
+    main_image_url: '',
+    gallery_urls: [] as string[],
+    theme_color: '#007AFF',
+    quote: '',
+    social_whatsapp: '',
+    social_instagram: '',
+    social_tiktok: '',
+    social_facebook: '',
+    whatsapp_greeting: ''
+  });
+  const [portfolioMessage, setPortfolioMessage] = useState<{ text: string, type: 'error' | 'success' } | null>(null);
+  const [portfolioLoading, setPortfolioLoading] = useState(false);
+  const [portfolioImageUploading, setPortfolioImageUploading] = useState(false);
+  const portfolioInputRef = useRef<HTMLInputElement>(null);
+
   // New: Data Upload Modal State
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   useEffect(() => {
@@ -373,7 +415,7 @@ export default function AdminDashboard() {
   const [settingsMessage, setSettingsMessage] = useState<{ text: string, type: 'error' | 'success' } | null>(null);
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [activeSettingsTab, setActiveSettingsTab] = useState<'menu' | 'profile' | 'social' | 'popup' | 'security' | 'theme'>('menu');
-  const [activeMainTab, setActiveMainTab] = useState<'tools' | 'shortlinks' | 'uploads'>('tools');
+  const [activeMainTab, setActiveMainTab] = useState<'tools' | 'shortlinks' | 'portfolios' | 'uploads'>('tools');
 
   // Cropper State
   const [cropModalOpen, setCropModalOpen] = useState(false);
@@ -397,6 +439,7 @@ export default function AdminDashboard() {
            setPageProfile(data);
            fetchTools(data.id);
            fetchShortLinks(data.id);
+           fetchPortfolios(data.id);
         } else {
            setPageProfile(null);
            console.error("Profile fetch error:", error);
@@ -426,6 +469,109 @@ export default function AdminDashboard() {
       .eq('profile_id', profileId)
       .order('created_at', { ascending: false });
     if (data && !error) setShortLinks(data);
+  };
+
+  const fetchPortfolios = async (profileId: string) => {
+    const { data, error } = await supabase
+      .from('portfolios')
+      .select('*')
+      .eq('profile_id', profileId)
+      .order('created_at', { ascending: false });
+    if (data && !error) setPortfolios(data);
+  };
+
+  const openPortfolioModal = (port?: Portfolio) => {
+    setPortfolioMessage(null);
+    if (port) {
+      setEditingPortfolio(port);
+      setPortfolioForm({
+        slug: port.slug,
+        title: port.title,
+        description: port.description || '',
+        main_image_url: port.main_image_url || '',
+        gallery_urls: port.gallery_urls || [],
+        theme_color: port.theme_color || '#007AFF',
+        quote: port.quote || '',
+        social_whatsapp: port.social_whatsapp || '',
+        social_instagram: port.social_instagram || '',
+        social_tiktok: port.social_tiktok || '',
+        social_facebook: port.social_facebook || '',
+        whatsapp_greeting: port.whatsapp_greeting || ''
+      });
+    } else {
+      setEditingPortfolio(null);
+      setPortfolioForm({
+        slug: '',
+        title: '',
+        description: '',
+        main_image_url: '',
+        gallery_urls: [],
+        theme_color: '#007AFF',
+        quote: '',
+        social_whatsapp: '',
+        social_instagram: '',
+        social_tiktok: '',
+        social_facebook: '',
+        whatsapp_greeting: ''
+      });
+    }
+    setIsPortfolioModalOpen(true);
+  };
+
+  const savePortfolio = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPortfolioMessage(null);
+    setPortfolioLoading(true);
+
+    if (!portfolioForm.slug || !portfolioForm.title || !portfolioForm.main_image_url) {
+      setPortfolioMessage({ text: 'Slug, Title and Main Image are required.', type: 'error' });
+      setPortfolioLoading(false);
+      return;
+    }
+
+    const cleanSlug = portfolioForm.slug.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+
+    try {
+      const payload = {
+        profile_id: pageProfile.id,
+        slug: cleanSlug,
+        title: portfolioForm.title,
+        description: portfolioForm.description,
+        main_image_url: portfolioForm.main_image_url,
+        gallery_urls: portfolioForm.gallery_urls,
+        theme_color: portfolioForm.theme_color,
+        quote: portfolioForm.quote,
+        social_whatsapp: portfolioForm.social_whatsapp,
+        social_instagram: portfolioForm.social_instagram,
+        social_tiktok: portfolioForm.social_tiktok,
+        social_facebook: portfolioForm.social_facebook,
+        whatsapp_greeting: portfolioForm.whatsapp_greeting
+      };
+
+      if (editingPortfolio) {
+        const { error } = await supabase.from('portfolios').update(payload).eq('id', editingPortfolio.id);
+        if (error) throw error;
+        setPortfolioMessage({ text: 'Portfolio updated!', type: 'success' });
+      } else {
+        const { error } = await supabase.from('portfolios').insert(payload);
+        if (error) throw error;
+        setPortfolioMessage({ text: 'Portfolio created!', type: 'success' });
+      }
+      
+      fetchPortfolios(pageProfile.id);
+      setTimeout(() => setIsPortfolioModalOpen(false), 800);
+    } catch (err: any) {
+      setPortfolioMessage({ text: err.message.includes('unique') ? 'Slug already exists' : err.message, type: 'error' });
+    } finally {
+      setPortfolioLoading(false);
+    }
+  };
+
+  const deletePortfolio = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!window.confirm("Delete this portfolio?")) return;
+    const { error } = await supabase.from('portfolios').delete().eq('id', id);
+    if (!error) fetchPortfolios(pageProfile.id);
   };
 
   const openShortLinkModal = (link?: ShortLink) => {
@@ -677,6 +823,34 @@ export default function AdminDashboard() {
     } finally {
       setToolVideoUploading(false);
       // reset input
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handlePortfolioImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isGallery: boolean = false) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    
+    if (file.size > 10 * 1024 * 1024) {
+      setPortfolioMessage({ text: 'Image too large. Max 10MB.', type: 'error' });
+      return;
+    }
+
+    setPortfolioImageUploading(true);
+    setPortfolioMessage({ text: 'Uploading...', type: 'success' });
+
+    try {
+      const data = await uploadImageClientSide(file, 'port');
+      if (isGallery) {
+        setPortfolioForm(prev => ({ ...prev, gallery_urls: [...prev.gallery_urls, data.url] }));
+      } else {
+        setPortfolioForm(prev => ({ ...prev, main_image_url: data.url }));
+      }
+      setPortfolioMessage({ text: 'Image uploaded!', type: 'success' });
+    } catch (err: any) {
+      setPortfolioMessage({ text: 'Upload failed: ' + err.message, type: 'error' });
+    } finally {
+      setPortfolioImageUploading(false);
       if (e.target) e.target.value = '';
     }
   };
@@ -1102,7 +1276,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      <div className={`flex flex-col animate-in fade-in duration-700 w-full relative z-10 ${isOwner ? 'pt-20' : ''}`}>
+      <div className={`flex flex-col animate-in fade-in duration-700 w-full relative z-10 pb-28 md:pb-12 ${isOwner ? 'pt-20' : ''}`}>
         <div className="mb-12 border-b border-white/10 pb-8 flex flex-col md:flex-row items-start justify-between gap-6 relative z-10 w-full overflow-hidden">
          <div className="w-full md:w-auto">
              <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2 flex items-center gap-3 md:gap-4 overflow-hidden">
@@ -1218,6 +1392,7 @@ export default function AdminDashboard() {
                <button onClick={() => {
                     if (activeMainTab === 'tools') openToolModal();
                     else if (activeMainTab === 'shortlinks') openShortLinkModal();
+                    else if (activeMainTab === 'portfolios') openPortfolioModal();
                     else {
                         setUploadStep(1);
                         setMediaName('');
@@ -1227,7 +1402,7 @@ export default function AdminDashboard() {
                   <Plus className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
                   {/* Uploads Data Tab Button */}
                   
-                  <span>{activeMainTab === 'tools' ? 'Add Tool' : activeMainTab === 'shortlinks' ? 'Add Link' : 'Add Content'}</span>
+                  <span>{activeMainTab === 'tools' ? 'Add Tool' : activeMainTab === 'shortlinks' ? 'Add Link' : activeMainTab === 'portfolios' ? 'Add Portfolio' : 'Add Content'}</span>
                </button>
             </div>
          )}
@@ -1243,7 +1418,7 @@ export default function AdminDashboard() {
       <div className="w-full max-w-5xl mx-auto flex flex-col gap-6 relative z-10 pt-4">
           
           {/* Main Tab Switcher */}
-          <div className="flex items-center justify-center gap-2 p-1.5 bg-white/[0.03] backdrop-blur-xl border border-white/5 rounded-2xl w-fit mx-auto shadow-2xl">
+          <div className="hidden md:flex items-center justify-center gap-2 p-1.5 bg-white/[0.03] backdrop-blur-xl border border-white/5 rounded-2xl w-fit mx-auto shadow-2xl">
               <button 
                 onClick={() => setActiveMainTab('tools')}
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeMainTab === 'tools' ? 'bg-purple-600 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)]' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
@@ -1259,6 +1434,13 @@ export default function AdminDashboard() {
                 Upload Media
               </button>
               <button 
+                onClick={() => setActiveMainTab('portfolios')}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeMainTab === 'portfolios' ? 'bg-emerald-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)]' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+              >
+                <Palette className="w-4 h-4" />
+                Portfolios
+              </button>
+              <button 
                 onClick={() => setActiveMainTab('shortlinks')}
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeMainTab === 'shortlinks' ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
               >
@@ -1266,6 +1448,86 @@ export default function AdminDashboard() {
                 URL Convert
               </button>
           </div>
+
+          {activeMainTab === 'portfolios' && (
+              <div className="space-y-6">
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white/[0.02] border border-white/5 p-6 rounded-3xl backdrop-blur-xl">
+                      <div>
+                          <h3 className="text-xl font-bold text-white mb-1">Portfolio Builder</h3>
+                          <p className="text-zinc-400 text-sm">Create high-end, iOS styled collections to showcase your work.</p>
+                      </div>
+                      <button 
+                          onClick={() => openPortfolioModal()}
+                          className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+                      >
+                          <Plus className="w-5 h-5" />
+                          New Portfolio
+                      </button>
+                  </div>
+
+                  {portfolios.length === 0 ? (
+                      <div className="text-center py-20 bg-white/[0.01] border border-white/5 rounded-3xl border-dashed">
+                          <Palette className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
+                          <h3 className="text-lg font-bold text-zinc-500">No portfolios created yet</h3>
+                      </div>
+                  ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
+                          {portfolios.map(port => (
+                              <div key={port.id} className="group bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 rounded-3xl p-5 backdrop-blur-xl transition-all hover:translate-y-[-4px]">
+                                  <div className="flex gap-5">
+                                      <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-white/10 shadow-lg">
+                                          <img src={port.main_image_url} alt={port.title} className="w-full h-full object-cover" />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                          <div className="flex items-center justify-between mb-1">
+                                              <h4 className="text-white font-bold truncate pr-2">{port.title}</h4>
+                                              <span className="text-[10px] uppercase font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-md border border-emerald-400/20">Active</span>
+                                          </div>
+                                          <p className="text-zinc-400 text-xs line-clamp-2 mb-3 font-light leading-relaxed">{port.description}</p>
+                                          <div className="flex items-center gap-3">
+                                              <div className="flex items-center gap-1.5 text-zinc-400">
+                                                  <ImageIcon size={12} className="text-zinc-500" />
+                                                  <span className="text-[10px] font-bold">{port.gallery_urls.length} Images</span>
+                                              </div>
+                                              <div className="flex items-center gap-1.5 text-zinc-400">
+                                                  <Eye size={12} className="text-zinc-500" />
+                                                  <span className="text-[10px] font-bold">{port.views_count} Views</span>
+                                              </div>
+                                          </div>
+                                      </div>
+                                  </div>
+                                  <div className="mt-5 pt-5 border-t border-white/5 flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                          <button 
+                                              onClick={() => openPortfolioModal(port)}
+                                              className="p-2.5 bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white rounded-xl transition-all border border-white/5"
+                                              title="Edit Portfolio"
+                                          >
+                                              <Edit size={16} />
+                                          </button>
+                                          <button 
+                                              onClick={(e) => deletePortfolio(port.id, e)}
+                                              className="p-2.5 bg-white/5 hover:bg-red-500/20 text-zinc-400 hover:text-red-300 rounded-xl transition-all border border-white/5 hover:border-red-500/20"
+                                              title="Delete Portfolio"
+                                          >
+                                              <Trash2 size={16} />
+                                          </button>
+                                      </div>
+                                      <button 
+                                          onClick={() => window.open(`/${pageProfile.username}/wb/${port.slug}`, '_blank')}
+                                          className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-xs font-bold transition-all active:scale-95"
+                                      >
+                                          <Globe size={14} className="text-emerald-400" />
+                                          Open Live
+                                          <ExternalLink size={12} className="opacity-50" />
+                                      </button>
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+                  )}
+              </div>
+          )}
 
           {activeMainTab === 'tools' ? (
             <>
@@ -2849,6 +3111,230 @@ export default function AdminDashboard() {
              </div>
          </div>
       )}
+      {/* Portfolio Modal */}
+      {isPortfolioModalOpen && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+             <div className="absolute inset-0 bg-[#050014]/90 backdrop-blur-3xl" onClick={() => setIsPortfolioModalOpen(false)}></div>
+             <div className="relative bg-[#0F0A1F]/90 border border-white/10 w-full max-w-2xl flex flex-col shadow-[0_0_80px_rgba(16,185,129,0.15)] rounded-[32px] animate-in zoom-in-95 duration-200 overflow-hidden max-h-[90vh]">
+                 <div className="px-8 pt-8 pb-4 flex items-center justify-between">
+                     <div className="flex items-center gap-3">
+                         <div className="w-10 h-10 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 border border-emerald-500/20">
+                             <Palette size={20} />
+                         </div>
+                         <div>
+                             <h2 className="text-2xl font-bold text-white tracking-tight">{editingPortfolio ? 'Edit Portfolio' : 'New Portfolio'}</h2>
+                             <p className="text-zinc-500 text-xs">Build your visual collection</p>
+                         </div>
+                     </div>
+                     <button onClick={() => setIsPortfolioModalOpen(false)} className="p-2 bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white rounded-full transition-colors">
+                         <X size={20} />
+                     </button>
+                 </div>
+
+                 <form onSubmit={savePortfolio} className="p-8 space-y-6 overflow-y-auto scrollbar-hide">
+                     {portfolioMessage && (
+                       <div className={`p-4 rounded-2xl text-sm border ${portfolioMessage.type === 'error' ? 'bg-red-500/10 border-red-500/30 text-red-200' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'}`}>
+                         {portfolioMessage.text}
+                       </div>
+                     )}
+
+                     <div className="space-y-6">
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                             <div className="space-y-2">
+                                 <label className="text-xs font-bold text-zinc-400 ml-1 uppercase tracking-widest">Main Landing Image</label>
+                                 <div 
+                                     onClick={() => portfolioInputRef.current?.click()}
+                                     className="relative aspect-square rounded-3xl bg-white/5 border border-white/10 border-dashed hover:border-emerald-500/50 cursor-pointer overflow-hidden flex flex-col items-center justify-center transition-all group"
+                                 >
+                                     {portfolioForm.main_image_url ? (
+                                         <>
+                                             <img src={portfolioForm.main_image_url} className="w-full h-full object-cover" />
+                                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                 <Plus className="text-white w-8 h-8" />
+                                             </div>
+                                         </>
+                                     ) : (
+                                         <>
+                                             <div className={`p-4 rounded-2xl bg-white/5 text-zinc-500 group-hover:text-emerald-400 transition-colors ${portfolioImageUploading ? 'animate-pulse' : ''}`}>
+                                                 <UploadCloud size={32} />
+                                             </div>
+                                             <span className="text-xs text-zinc-500 mt-2">Upload Hero Image</span>
+                                         </>
+                                     )}
+                                     <input type="file" ref={portfolioInputRef} className="hidden" accept="image/*" onChange={(e) => handlePortfolioImageUpload(e)} />
+                                 </div>
+                             </div>
+                             <div className="space-y-4">
+                                 <div className="space-y-1.5 text-sm">
+                                     <label className="text-xs font-bold text-zinc-400 ml-1 uppercase tracking-widest">Portfolio Title</label>
+                                     <input 
+                                         type="text" 
+                                         value={portfolioForm.title}
+                                         onChange={e => setPortfolioForm({...portfolioForm, title: e.target.value})}
+                                         className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3.5 text-white outline-none focus:border-emerald-500 transition-all placeholder-zinc-600"
+                                         placeholder="e.g. My Street Photography"
+                                     />
+                                 </div>
+                                 <div className="space-y-1.5 text-sm">
+                                     <label className="text-xs font-bold text-zinc-400 ml-1 uppercase tracking-widest">URL Slug</label>
+                                     <input 
+                                         type="text" 
+                                         value={portfolioForm.slug}
+                                         onChange={e => setPortfolioForm({...portfolioForm, slug: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '')})}
+                                         className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3.5 text-white outline-none focus:border-emerald-500 transition-all font-mono placeholder-zinc-600"
+                                         placeholder="street-work"
+                                     />
+                                 </div>
+                                 <div className="space-y-1.5 text-sm">
+                                     <label className="text-xs font-bold text-zinc-400 ml-1 uppercase tracking-widest">Theme Color</label>
+                                     <div className="flex gap-2">
+                                         {['#007AFF', '#FF2D55', '#30D158', '#FF9F0A', '#5856D6'].map(color => (
+                                             <button 
+                                                 key={color}
+                                                 type="button"
+                                                 onClick={() => setPortfolioForm({...portfolioForm, theme_color: color})}
+                                                 className={`w-8 h-8 rounded-full border-2 transition-transform ${portfolioForm.theme_color === color ? 'border-white scale-110' : 'border-transparent opacity-60'}`}
+                                                 style={{ backgroundColor: color }}
+                                             />
+                                         ))}
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
+
+                         <div className="space-y-1.5">
+                             <label className="text-xs font-bold text-zinc-400 ml-1 uppercase tracking-widest">Sub-title / Description</label>
+                             <input 
+                                 type="text" 
+                                 value={portfolioForm.description}
+                                 onChange={e => setPortfolioForm({...portfolioForm, description: e.target.value})}
+                                 className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3.5 text-white outline-none focus:border-emerald-500 transition-all placeholder-zinc-600"
+                                 placeholder="Briefly describe this collection"
+                             />
+                         </div>
+
+                         <div className="space-y-1.5">
+                             <label className="text-xs font-bold text-zinc-400 ml-1 uppercase tracking-widest">Gallery Images (Max 20)</label>
+                             <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+                                 {portfolioForm.gallery_urls.map((url, index) => (
+                                     <div key={index} className="relative aspect-square rounded-xl overflow-hidden border border-white/10 group">
+                                         <img src={url} className="w-full h-full object-cover" />
+                                         <button 
+                                             type="button" 
+                                             onClick={() => setPortfolioForm(prev => ({ ...prev, gallery_urls: prev.gallery_urls.filter((_, i) => i !== index) }))}
+                                             className="absolute inset-0 bg-red-500/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                         >
+                                             <Trash2 size={16} className="text-white" />
+                                         </button>
+                                     </div>
+                                 ))}
+                                 {portfolioForm.gallery_urls.length < 20 && (
+                                     <label className="aspect-square rounded-xl bg-white/5 border border-white/10 border-dashed hover:border-emerald-500/50 flex items-center justify-center cursor-pointer transition-all hover:bg-white/10">
+                                         <Plus size={24} className="text-zinc-600" />
+                                         <input type="file" className="hidden" accept="image/*" onChange={(e) => handlePortfolioImageUpload(e, true)} />
+                                     </label>
+                                 )}
+                             </div>
+                         </div>
+
+                         <div className="space-y-1.5">
+                             <label className="text-xs font-bold text-zinc-400 ml-1 uppercase tracking-widest">Signature Quote</label>
+                             <textarea 
+                                 rows={2}
+                                 value={portfolioForm.quote}
+                                 onChange={e => setPortfolioForm({...portfolioForm, quote: e.target.value})}
+                                 className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3.5 text-white outline-none focus:border-emerald-500 transition-all placeholder-zinc-600 resize-none"
+                                 placeholder="Your inspirational quote here..."
+                             />
+                         </div>
+
+                         <div className="space-y-4 pt-4 border-t border-white/5">
+                             <label className="text-xs font-bold text-zinc-400 ml-1 uppercase tracking-widest">Social Media Overrides</label>
+                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                 <div className="space-y-1">
+                                     <div className="flex items-center gap-2 mb-1">
+                                         <Phone size={12} className="text-green-500" />
+                                         <span className="text-[10px] text-zinc-500 font-bold uppercase">WhatsApp</span>
+                                     </div>
+                                     <input 
+                                         type="text" 
+                                         value={portfolioForm.social_whatsapp}
+                                         onChange={e => setPortfolioForm({...portfolioForm, social_whatsapp: e.target.value})}
+                                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-emerald-500 transition-all"
+                                         placeholder="e.g. 923xxxxxxxxx"
+                                     />
+                                 </div>
+                                 <div className="space-y-1">
+                                     <div className="flex items-center gap-2 mb-1">
+                                         <Instagram size={12} className="text-pink-500" />
+                                         <span className="text-[10px] text-zinc-500 font-bold uppercase">Instagram</span>
+                                     </div>
+                                     <input 
+                                         type="url" 
+                                         value={portfolioForm.social_instagram}
+                                         onChange={e => setPortfolioForm({...portfolioForm, social_instagram: e.target.value})}
+                                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-emerald-500 transition-all"
+                                         placeholder="Profile URL"
+                                     />
+                                 </div>
+                                 <div className="space-y-1">
+                                     <div className="flex items-center gap-2 mb-1">
+                                         <Music2 size={12} className="text-white" />
+                                         <span className="text-[10px] text-zinc-500 font-bold uppercase">TikTok</span>
+                                     </div>
+                                     <input 
+                                         type="url" 
+                                         value={portfolioForm.social_tiktok}
+                                         onChange={e => setPortfolioForm({...portfolioForm, social_tiktok: e.target.value})}
+                                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-emerald-500 transition-all"
+                                         placeholder="Profile URL"
+                                     />
+                                 </div>
+                                 <div className="space-y-1">
+                                     <div className="flex items-center gap-2 mb-1">
+                                         <Facebook size={12} className="text-blue-500" />
+                                         <span className="text-[10px] text-zinc-500 font-bold uppercase">Facebook</span>
+                                     </div>
+                                     <input 
+                                         type="url" 
+                                         value={portfolioForm.social_facebook}
+                                         onChange={e => setPortfolioForm({...portfolioForm, social_facebook: e.target.value})}
+                                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-emerald-500 transition-all"
+                                         placeholder="Profile URL"
+                                     />
+                                 </div>
+                             </div>
+
+                             <div className="space-y-1">
+                                 <div className="flex items-center gap-2 mb-1">
+                                     <MessageCircle size={12} className="text-green-500" />
+                                     <span className="text-[10px] text-zinc-500 font-bold uppercase">WhatsApp Greeting</span>
+                                 </div>
+                                 <textarea 
+                                     rows={2}
+                                     value={portfolioForm.whatsapp_greeting}
+                                     onChange={e => setPortfolioForm({...portfolioForm, whatsapp_greeting: e.target.value})}
+                                     className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-emerald-500 transition-all resize-none"
+                                     placeholder="Message shown in the chat window..."
+                                 />
+                             </div>
+                         </div>
+                     </div>
+
+                     <div className="pt-6 border-t border-white/5">
+                         <button 
+                             type="submit" 
+                             disabled={portfolioLoading || portfolioImageUploading}
+                             className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
+                         >
+                             {portfolioLoading ? <Activity className="animate-spin" /> : editingPortfolio ? 'Apply Updates' : 'Launch Portfolio'}
+                         </button>
+                     </div>
+                 </form>
+             </div>
+         </div>
+      )}
+
       {/* Data Upload Modal (Step by Step) */}
       {isUploadModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -3025,6 +3511,64 @@ export default function AdminDashboard() {
               </div>
           </div>
       )}
+      <div className="md:hidden fixed bottom-6 left-4 right-4 z-[60] flex items-center justify-center">
+        <div className="w-full max-w-md bg-black/60 backdrop-blur-2xl border border-white/10 rounded-[28px] h-20 flex items-center justify-around px-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+            <button 
+                onClick={() => setActiveMainTab('tools')}
+                className={`flex flex-col items-center gap-1 flex-1 py-1 transition-all ${activeMainTab === 'tools' ? 'text-purple-400' : 'text-zinc-500 hover:text-zinc-400'}`}
+            >
+                <div className={`p-2 rounded-2xl transition-all ${activeMainTab === 'tools' ? 'bg-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.2)]' : ''}`}>
+                    <MessageSquare size={20} />
+                </div>
+                <span className="text-[9px] font-bold uppercase tracking-widest">Tools</span>
+            </button>
+
+            <button 
+                onClick={() => setActiveMainTab('uploads')}
+                className={`flex flex-col items-center gap-1 flex-1 py-1 transition-all ${activeMainTab === 'uploads' ? 'text-pink-400' : 'text-zinc-500 hover:text-zinc-400'}`}
+            >
+                <div className={`p-2 rounded-2xl transition-all ${activeMainTab === 'uploads' ? 'bg-pink-500/20 shadow-[0_0_15px_rgba(219,39,119,0.2)]' : ''}`}>
+                    <UploadCloud size={20} />
+                </div>
+                <span className="text-[9px] font-bold uppercase tracking-widest">Media</span>
+            </button>
+
+            {/* Floating Action Button (Center) */}
+            <div className="relative -top-3">
+                <button 
+                   onClick={() => {
+                       if (activeMainTab === 'tools') openToolModal();
+                       else if (activeMainTab === 'shortlinks') openShortLinkModal();
+                       else if (activeMainTab === 'portfolios') openPortfolioModal();
+                       else setIsUploadModalOpen(true);
+                   }}
+                   className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-blue-600 flex items-center justify-center text-white shadow-[0_10px_25px_rgba(124,58,237,0.4)] active:scale-90 transition-all border border-white/20"
+                >
+                   <Plus size={28} />
+                </button>
+            </div>
+
+            <button 
+                onClick={() => setActiveMainTab('portfolios')}
+                className={`flex flex-col items-center gap-1 flex-1 py-1 transition-all ${activeMainTab === 'portfolios' ? 'text-emerald-400' : 'text-zinc-500 hover:text-zinc-400'}`}
+            >
+                <div className={`p-2 rounded-2xl transition-all ${activeMainTab === 'portfolios' ? 'bg-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : ''}`}>
+                    <Palette size={20} />
+                </div>
+                <span className="text-[9px] font-bold uppercase tracking-widest">Folio</span>
+            </button>
+
+            <button 
+                onClick={() => setActiveMainTab('shortlinks')}
+                className={`flex flex-col items-center gap-1 flex-1 py-1 transition-all ${activeMainTab === 'shortlinks' ? 'text-indigo-400' : 'text-zinc-500 hover:text-zinc-400'}`}
+            >
+                <div className={`p-2 rounded-2xl transition-all ${activeMainTab === 'shortlinks' ? 'bg-indigo-500/20 shadow-[0_0_15px_rgba(79,70,229,0.2)]' : ''}`}>
+                    <LinkIcon size={20} />
+                </div>
+                <span className="text-[9px] font-bold uppercase tracking-widest">Links</span>
+            </button>
+        </div>
+      </div>
     </div>
     </div>
   );

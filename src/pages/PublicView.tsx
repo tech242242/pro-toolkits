@@ -21,6 +21,7 @@ interface Tool {
   gate_url?: string;
   gate_text?: string;
   gate_icon?: string;
+  video_urls?: string[];
 }
 
 export default function PublicView() {
@@ -44,6 +45,17 @@ export default function PublicView() {
   const [enteredPassword, setEnteredPassword] = useState('');
   const [pwError, setPwError] = useState(false);
   const [isGatingVerified, setIsGatingVerified] = useState(false);
+  
+  // Video Modal
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [currentVideoUrls, setCurrentVideoUrls] = useState<string[]>([]);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+
+  const openVideoModal = (urls: string[]) => {
+      setCurrentVideoUrls(urls);
+      setCurrentVideoIndex(0);
+      setVideoModalOpen(true);
+  };
 
   const handleToolClick = (tool: Tool, e: React.MouseEvent) => {
     e.preventDefault();
@@ -484,6 +496,16 @@ export default function PublicView() {
                               <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors z-10"></div>
                               
                               <div className="absolute bottom-2 left-2 flex gap-1 z-20">
+                                  {tool.video_urls && tool.video_urls.length > 0 && (
+                                     <button 
+                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); openVideoModal(tool.video_urls!); }}
+                                        className="p-1 px-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-purple-500/50 text-white hover:text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.4)] flex items-center gap-1 group-hover:bg-purple-500/20 transition-all"
+                                        title="Watch Videos"
+                                      >
+                                          <Video className="w-3 h-3 group-hover:scale-110 transition-transform" />
+                                          <span className="text-[10px] font-bold">{tool.video_urls.length > 1 ? `${tool.video_urls.length} Vids` : 'Vid'}</span>
+                                      </button>
+                                  )}
                                   <button 
                                      onClick={(e) => handleToolShare(e, tool)} 
                                      className="p-1 px-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 text-white hover:text-emerald-300"
@@ -702,6 +724,44 @@ export default function PublicView() {
                </div>
            </div>
         </div>
+      )}
+
+      {/* Video Modal */}
+      {videoModalOpen && currentVideoUrls.length > 0 && (
+         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/95 backdrop-blur-3xl animate-in fade-in duration-300">
+            <button 
+               onClick={() => setVideoModalOpen(false)} 
+               className="absolute top-4 right-4 md:top-8 md:right-8 text-white/50 hover:text-white p-2 rounded-full transition-colors z-50 bg-white/5"
+            >
+               <X className="w-8 h-8" />
+            </button>
+            <div className="w-full max-w-5xl px-4 flex flex-col items-center">
+                <div className="w-full aspect-video bg-black rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                    <video 
+                       src={currentVideoUrls[currentVideoIndex]} 
+                       controls 
+                       autoPlay 
+                       className="w-full h-full object-contain"
+                    />
+                </div>
+                {currentVideoUrls.length > 1 && (
+                   <div className="flex gap-2.5 mt-6 overflow-x-auto max-w-full pb-4 custom-scrollbar px-2">
+                       {currentVideoUrls.map((url, idx) => (
+                           <button
+                               key={idx}
+                               onClick={() => setCurrentVideoIndex(idx)}
+                               className={`relative w-24 h-16 shrink-0 rounded-lg overflow-hidden border-2 transition-all ${idx === currentVideoIndex ? 'border-purple-500 scale-105 shadow-[0_0_20px_rgba(168,85,247,0.4)]' : 'border-white/10 opacity-60 hover:opacity-100'}`}
+                           >
+                               <video src={url} className="w-full h-full object-cover" />
+                               <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                                   <Video className="w-4 h-4 text-white opacity-80" />
+                               </div>
+                           </button>
+                       ))}
+                   </div>
+                )}
+            </div>
+         </div>
       )}
 
       </div>

@@ -45,6 +45,45 @@ const uploadMediaClientSide = async (file: File | Blob, pathPrefix: string): Pro
   return { url: result.secure_url };
 };
 
+const uploadVideoClientSide = async (file: File | Blob): Promise<{ url: string }> => {
+  if (file.size > 50 * 1024 * 1024) {
+    throw new Error('Video must be 50MB or smaller.');
+  }
+
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'divloq4oz'; 
+  const apiKey = process.env.CLOUDINARY_API_KEY || '999667235587213';
+  const apiSecret = process.env.CLOUDINARY_API_SECRET || 'hKQ5Q6x6bdJOflp14Nk_S-MGrkw';
+  
+  const timestamp = Math.round((new Date).getTime()/1000);
+  const signatureString = `timestamp=${timestamp}${apiSecret}`;
+  
+  const encoder = new TextEncoder();
+  const data = encoder.encode(signatureString);
+  const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("api_key", apiKey);
+  formData.append("timestamp", timestamp.toString());
+  formData.append("signature", signature);
+  formData.append("resource_type", "video");
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, {
+    method: "POST",
+    body: formData
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error('Cloudinary video upload error:', errText);
+    throw new Error(`Cloudinary Video Upload Failed: ${errText}`);
+  }
+  const result = await res.json();
+  return { url: result.secure_url };
+};
+
 const uploadImageClientSide = async (file: File | Blob, pathPrefix: string): Promise<{ url: string }> => {
   const publicKey = process.env.IMAGEKIT_PUBLIC_KEY || 'public_8ulBaGE6HasMRTYenvVihqllUm8=';
   const privateKey = process.env.IMAGEKIT_PRIVATE_KEY || 'private_DBHLVLfKVktC1UhaxnMNjJ++5sc=';
@@ -141,6 +180,7 @@ interface Tool {
   gate_url?: string;
   gate_text?: string;
   gate_icon?: string;
+  video_urls?: string[];
 }
 
 interface ShortLink {
@@ -236,9 +276,11 @@ export default function AdminDashboard() {
     is_gated: false,
     gate_url: '',
     gate_text: 'Subscribe first to unlock',
-    gate_icon: 'youtube'
+    gate_icon: 'youtube',
+    video_urls: [] as string[]
   });
   const [toolImageUploading, setToolImageUploading] = useState(false);
+  const [toolVideoUploading, setToolVideoUploading] = useState(false);
   const toolInputRef = useRef<HTMLInputElement>(null);
   const [toolMessage, setToolMessage] = useState<{ text: string, type: 'error' | 'success' } | null>(null);
 
@@ -605,6 +647,40 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleToolVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    
+    // Up to 50MB
+    if (file.size > 50 * 1024 * 1024) {
+      setToolMessage({ text: `File too large (${(file.size / (1024 * 1024)).toFixed(2)}MB). Maximum allowed is 50MB.`, type: 'error' });
+      if (e.target) e.target.value = '';
+      return;
+    }
+    
+    if (toolForm.video_urls.length >= 10) {
+      setToolMessage({ text: 'You can only upload up to 10 videos per tool.', type: 'error' });
+      return;
+    }
+
+    setToolVideoUploading(true);
+    setToolMessage(null);
+
+    try {
+      setToolMessage({ text: 'Uploading video...', type: 'success' });
+      const data = await uploadVideoClientSide(file);
+      setToolForm(prev => ({ ...prev, video_urls: [...prev.video_urls, data.url] }));
+      setToolMessage({ text: 'Video uploaded successfully!', type: 'success' });
+    } catch (err: any) {
+      console.error(err);
+      setToolMessage({ text: err.message || 'Video upload failed.', type: 'error' });
+    } finally {
+      setToolVideoUploading(false);
+      // reset input
+      if (e.target) e.target.value = '';
+    }
+  };
+
   const handleToolImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const originalFile = e.target.files[0];
@@ -656,7 +732,8 @@ export default function AdminDashboard() {
         is_gated: !!tool.is_gated,
         gate_url: tool.gate_url || '',
         gate_text: tool.gate_text || 'Subscribe first to unlock',
-        gate_icon: tool.gate_icon || 'youtube'
+        gate_icon: tool.gate_icon || 'youtube',
+        video_urls: tool.video_urls || []
       });
     } else {
       setEditingTool(null);
@@ -672,7 +749,8 @@ export default function AdminDashboard() {
         is_gated: false,
         gate_url: '',
         gate_text: 'Subscribe first to unlock',
-        gate_icon: 'youtube'
+        gate_icon: 'youtube',
+        video_urls: [] as string[]
       });
     }
     setIsModalOpen(true);
@@ -704,7 +782,8 @@ export default function AdminDashboard() {
         is_gated: toolForm.is_gated,
         gate_url: toolForm.gate_url,
         gate_text: toolForm.gate_text,
-        gate_icon: toolForm.gate_icon
+        gate_icon: toolForm.gate_icon,
+        video_urls: toolForm.video_urls
       };
 
       if (editingTool) {
@@ -981,7 +1060,49 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      <div className="flex flex-col animate-in fade-in duration-700 w-full relative z-10">
+      {/* Fixed Admin Toolbar */}
+      {isOwner && (
+        <div className="fixed top-0 left-0 right-0 z-[100] bg-black/40 backdrop-blur-xl border-b border-white/10 px-4 py-3 sm:px-6">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-[0_0_15px_rgba(168,85,247,0.4)]">
+                <Shield className="w-4 h-4 text-white" />
+              </div>
+              <span className="text-white font-bold text-sm tracking-tight hidden xs:block">Admin Panel</span>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3">
+              <button 
+                onClick={() => window.open(`/${pageProfile.username}`, '_blank')}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-purple-500/50 text-zinc-300 hover:text-white transition-all text-xs font-medium"
+              >
+                <Globe className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">View Page</span>
+              </button>
+              
+              <button 
+                onClick={openSettings}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-purple-500/50 text-zinc-300 hover:text-white transition-all text-xs font-medium"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Settings</span>
+              </button>
+
+              <div className="w-px h-4 bg-white/10 mx-1"></div>
+
+              <button 
+                onClick={handleSignOut}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 hover:border-red-500 text-red-300 hover:text-red-200 transition-all text-xs font-medium"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={`flex flex-col animate-in fade-in duration-700 w-full relative z-10 ${isOwner ? 'pt-20' : ''}`}>
         <div className="mb-12 border-b border-white/10 pb-8 flex flex-col md:flex-row items-start justify-between gap-6 relative z-10 w-full overflow-hidden">
          <div className="w-full md:w-auto">
              <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2 flex items-center gap-3 md:gap-4 overflow-hidden">
@@ -1725,6 +1846,33 @@ export default function AdminDashboard() {
                                     {toolImageUploading ? 'Uploading...' : 'Select Image'}
                                     <input type="file" accept="image/*" onChange={handleToolImageUpload} ref={toolInputRef} className="hidden" disabled={toolImageUploading} />
                                  </label>
+                             </div>
+                         </div>
+                         
+                         <div className="flex flex-col gap-2">
+                             <label className="text-sm font-light text-zinc-300 ml-1">Tool Videos (Max 10)</label>
+                             <div className="flex flex-col gap-3">
+                                 <label className="cursor-pointer bg-white/[0.05] border border-white/10 hover:border-purple-400 text-sm px-5 py-3 rounded-xl hover:text-purple-300 transition-colors flex items-center justify-center gap-2 self-start">
+                                    {toolVideoUploading ? <Activity className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
+                                    {toolVideoUploading ? 'Uploading Video...' : 'Upload Video'}
+                                    <input type="file" accept="video/*" onChange={handleToolVideoUpload} className="hidden" disabled={toolVideoUploading || toolForm.video_urls.length >= 10} />
+                                 </label>
+                                 {toolForm.video_urls.length > 0 && (
+                                     <div className="flex flex-wrap gap-3 mt-2">
+                                         {toolForm.video_urls.map((vidUrl, index) => (
+                                             <div key={index} className="relative w-24 h-24 bg-black border border-white/10 rounded-xl overflow-hidden group">
+                                                 <video src={vidUrl} className="w-full h-full object-cover" muted />
+                                                 <button 
+                                                     type="button" 
+                                                     onClick={() => setToolForm(prev => ({ ...prev, video_urls: prev.video_urls.filter((_, i) => i !== index) }))} 
+                                                     className="absolute inset-0 bg-red-500/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                 >
+                                                     <span className="text-xs font-bold text-white">Remove</span>
+                                                 </button>
+                                             </div>
+                                         ))}
+                                     </div>
+                                 )}
                              </div>
                          </div>
 

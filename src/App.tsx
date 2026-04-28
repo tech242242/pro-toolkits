@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './lib/AuthContext';
 import Layout from './components/Layout';
 import { Activity } from 'lucide-react';
+import PWAInstallButton from './components/PWAInstallButton';
 
 // Lazy load pages for faster initial rendering (Code Splitting)
 const Login = lazy(() => import('./pages/Login'));
@@ -74,6 +75,7 @@ export default function App() {
             </Routes>
           </Suspense>
         </Layout>
+        <PWAInstallButton />
       </BrowserRouter>
     </AuthProvider>
   );

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, Navigate } from 'react-router-dom';
+import { useAuth } from '../lib/AuthContext';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -8,6 +9,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ text: string, type: 'error' | 'success' } | null>(null);
   const navigate = useNavigate();
+  const { user, profile, loading: authLoading } = useAuth();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +29,10 @@ export default function Login() {
       }
     }
   };
+
+  if (!authLoading && user && profile) {
+    return <Navigate to={`/admin/${profile.username}`} replace />;
+  }
 
   return (
     <div className="w-full max-w-md mx-auto bg-white/[0.03] backdrop-blur-[40px] border border-white/20 rounded-3xl p-8 shadow-[0_0_40px_rgba(168,85,247,0.15)] shrink-0 animate-in fade-in zoom-in duration-500 my-auto relative overflow-hidden">

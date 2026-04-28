@@ -11,6 +11,23 @@ import { SocialButton, RenderSocialIcon, SocialIconColors } from '../components/
 import { GlowWrapper } from '../components/GlowWrapper';
 import { WALLPAPER_TEMPLATES } from '../constants/wallpapers';
 
+const uploadToSupabase = async (file: File | Blob, pathPrefix: string): Promise<{ url: string }> => {
+  const fileExt = file instanceof File ? file.name.split('.').pop() || 'tmp' : 'jpg';
+  const fileName = `${pathPrefix}-${Date.now()}-${Math.floor(Math.random() * 10000)}.${fileExt}`;
+  
+  const { data, error } = await supabase.storage.from('uploads').upload(fileName, file, {
+    cacheControl: '3600',
+    upsert: false
+  });
+  
+  if (error) {
+    throw new Error(`Storage Error: ${error.message} (Ensure you have created a public bucket named 'uploads' in Supabase)`);
+  }
+  
+  const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(fileName);
+  return { url: publicUrl };
+};
+
 interface Profile {
   id: string;
   username: string;
@@ -123,34 +140,8 @@ export default function AdminDashboard() {
       const formData = new FormData();
       formData.append('image', compressedFile, compressedFile.name || 'bg.jpg');
 
-      setMessage({ text: 'Uploading to server...', type: 'success' });
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      }).catch(err => {
-        console.error('Fetch error:', err);
-        throw new Error(`Network Error: ${err.message}. The server may be unreachable or the file too large for the connection.`);
-      });
-
-      const contentType = res.headers.get('content-type');
-      if (!res.ok) {
-        let errorMessage = 'Upload failed';
-        if (contentType && contentType.includes('application/json')) {
-            const data = await res.json();
-            errorMessage = data.error || data.details || errorMessage;
-        } else {
-            const text = await res.text();
-            console.error('Server error response:', text);
-            if (text.includes('FUNCTION_INVOCATION_FAILED')) {
-                errorMessage = 'Vercel Function Error: The file might be too large (>4.5MB) or the function timed out. Please try a smaller image.';
-            } else {
-                errorMessage = `Server Error (${res.status}): Check Vercel logs.`;
-            }
-        }
-        throw new Error(errorMessage);
-      }
-
-      const data = await res.json();
+      setMessage({ text: 'Uploading...', type: 'success' });
+      const data = await uploadToSupabase(compressedFile, 'bg');
 
       setSettingsForm(prev => ({ ...prev, bg_image_url: data.url }));
       setSettingsMessage({ text: 'Wallpaper uploaded!', type: 'success' });
@@ -532,31 +523,8 @@ export default function AdminDashboard() {
       const formData = new FormData();
       formData.append('image', compressedFile, compressedFile.name || 'avatar.jpg');
       
-      setMessage({ text: 'Uploading to server...', type: 'success' });
-      const response = await fetch('/api/upload', { 
-        method: 'POST', 
-        body: formData
-      });
-      
-      const contentType = response.headers.get('content-type');
-      if (!response.ok) {
-        let errorMessage = 'Upload failed';
-        if (contentType && contentType.includes('application/json')) {
-          const data = await response.json();
-          errorMessage = data.error || data.details || errorMessage;
-        } else {
-          const text = await response.text();
-          console.error('Server error response:', text);
-          if (text.includes('FUNCTION_INVOCATION_FAILED')) {
-            errorMessage = 'Vercel Function Error: The file might be too large (>4.5MB) or the function timed out. Please try a smaller image.';
-          } else {
-            errorMessage = `Server Error (${response.status}): Check Vercel logs.`;
-          }
-        }
-        throw new Error(errorMessage);
-      }
-
-      const data = await response.json();
+      setMessage({ text: 'Uploading...', type: 'success' });
+      const data = await uploadToSupabase(compressedFile, 'avatar');
       
       const { error } = await supabase.from('profiles').update({ avatar_url: data.url }).eq('id', user?.id!);
       if (error) throw error;
@@ -596,35 +564,8 @@ export default function AdminDashboard() {
       const formData = new FormData();
       formData.append('image', compressedFile, compressedFile.name || 'tool-image.jpg');
       
-      setToolMessage({ text: 'Uploading to server...', type: 'success' });
-      const response = await fetch('/api/upload', { 
-        method: 'POST', 
-        body: formData
-      })
-        .catch(err => {
-            console.error('Fetch error:', err);
-            throw new Error(`Connection Error: ${err.message}. The server may be unreachable.`);
-        });
-      
-      const contentType = response.headers.get('content-type');
-      if (!response.ok) {
-        let errorMessage = 'Upload failed';
-        if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-            errorMessage = data.error || data.details || errorMessage;
-        } else {
-            const text = await response.text();
-            console.error('Server error response:', text);
-            if (text.includes('FUNCTION_INVOCATION_FAILED')) {
-                errorMessage = 'Vercel Function Error: The file might be too large (>4.5MB) or the function timed out.';
-            } else {
-                errorMessage = `Server Error (${response.status}): Check Vercel logs.`;
-            }
-        }
-        throw new Error(errorMessage);
-      }
-
-      const data = await response.json();
+      setToolMessage({ text: 'Uploading...', type: 'success' });
+      const data = await uploadToSupabase(compressedFile, 'tool-image');
       setToolForm(prev => ({ ...prev, image_url: data.url }));
       setToolMessage({ text: 'Image uploaded successfully!', type: 'success' });
     } catch (err: any) {
@@ -1379,35 +1320,8 @@ export default function AdminDashboard() {
                                             const formData = new FormData();
                                             formData.append('file', file);
                                             
-                                            setMessage({ text: 'Uploading to server...', type: 'success' });
-                                            const response = await fetch('/api/upload-media', { 
-                                                method: 'POST', 
-                                                body: formData
-                                            })
-                                                .catch(err => {
-                                                    console.error('Fetch error:', err);
-                                                    throw new Error(`Network Error: ${err.message}. Connection might have been terminated due to file size or timeout.`);
-                                                });
-                                            
-                                            const contentType = response.headers.get('content-type');
-                                            if (!response.ok) {
-                                                let errorMessage = 'Media upload failed';
-                                                if (contentType && contentType.includes('application/json')) {
-                                                    const data = await response.json();
-                                                    errorMessage = data.error || data.details || errorMessage;
-                                                } else {
-                                                    const text = await response.text();
-                                                    console.error('Media upload error response:', text);
-                                                    if (text.includes('FUNCTION_INVOCATION_FAILED')) {
-                                                        errorMessage = 'Vercel Function Error: The file might be too large (>4.5MB) or the function timed out. Please try a smaller file.';
-                                                    } else {
-                                                        errorMessage = `Server Error (${response.status}): Check Vercel logs.`;
-                                                    }
-                                                }
-                                                throw new Error(errorMessage);
-                                            }
-
-                                            const data = await response.json();
+                                            setMessage({ text: 'Uploading...', type: 'success' });
+                                            const data = await uploadToSupabase(file, 'media');
                                             
                                             setMessage({ text: 'Syncing with database...', type: 'success' });
                                             const { data: toolRecord, error: dbError } = await supabase.from('tools').insert([{

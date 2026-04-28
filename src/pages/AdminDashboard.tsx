@@ -11,21 +11,84 @@ import { SocialButton, RenderSocialIcon, SocialIconColors } from '../components/
 import { GlowWrapper } from '../components/GlowWrapper';
 import { WALLPAPER_TEMPLATES } from '../constants/wallpapers';
 
-const uploadToSupabase = async (file: File | Blob, pathPrefix: string): Promise<{ url: string }> => {
-  const fileExt = file instanceof File ? file.name.split('.').pop() || 'tmp' : 'jpg';
-  const fileName = `${pathPrefix}-${Date.now()}-${Math.floor(Math.random() * 10000)}.${fileExt}`;
+const uploadMediaClientSide = async (file: File | Blob, pathPrefix: string): Promise<{ url: string }> => {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'divloq4oz'; 
+  const apiKey = process.env.CLOUDINARY_API_KEY || '999667235587213';
+  const apiSecret = process.env.CLOUDINARY_API_SECRET || 'hKQ5Q6x6bdJOflp14Nk_S-MGrkw';
   
-  const { data, error } = await supabase.storage.from('uploads').upload(fileName, file, {
-    cacheControl: '3600',
-    upsert: false
+  const timestamp = Math.round((new Date).getTime()/1000);
+  const signatureString = `timestamp=${timestamp}${apiSecret}`;
+  
+  const encoder = new TextEncoder();
+  const data = encoder.encode(signatureString);
+  const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("api_key", apiKey);
+  formData.append("timestamp", timestamp.toString());
+  formData.append("signature", signature);
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+    method: "POST",
+    body: formData
   });
-  
-  if (error) {
-    throw new Error(`Storage Error: ${error.message} (Ensure you have created a public bucket named 'uploads' in Supabase)`);
+
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error('Cloudinary upload error:', errText);
+    throw new Error(`Cloudinary Upload Failed: ${errText}`);
   }
+  const result = await res.json();
+  return { url: result.secure_url };
+};
+
+const uploadImageClientSide = async (file: File | Blob, pathPrefix: string): Promise<{ url: string }> => {
+  const publicKey = process.env.IMAGEKIT_PUBLIC_KEY || 'public_8ulBaGE6HasMRTYenvVihqllUm8=';
+  const privateKey = process.env.IMAGEKIT_PRIVATE_KEY || 'private_DBHLVLfKVktC1UhaxnMNjJ++5sc=';
   
-  const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(fileName);
-  return { url: publicUrl };
+  const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  const expire = Math.floor(Date.now() / 1000) + 60 * 30; // 30 mins
+  
+  const encoder = new TextEncoder();
+  const keyBuffer = encoder.encode(privateKey);
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    keyBuffer,
+    { name: 'HMAC', hash: 'SHA-1' },
+    false,
+    ['sign']
+  );
+  
+  const dataBuffer = encoder.encode(token + expire);
+  const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, dataBuffer);
+  const signatureArray = Array.from(new Uint8Array(signatureBuffer));
+  const signature = signatureArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+  const formData = new FormData();
+  formData.append("file", file);
+  const fileExt = file instanceof File ? file.name.split('.').pop() || 'tmp' : 'jpg';
+  formData.append("fileName", `${pathPrefix}-${Date.now()}-${Math.floor(Math.random() * 10000)}.${fileExt}`);
+  formData.append("publicKey", publicKey);
+  formData.append("signature", signature);
+  formData.append("expire", expire.toString());
+  formData.append("token", token);
+  formData.append("folder", "/yalo-assets");
+
+  const res = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
+    method: "POST",
+    body: formData
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error('ImageKit upload error:', errText);
+    throw new Error(`ImageKit Upload Failed: ${errText}`);
+  }
+  const result = await res.json();
+  return { url: result.url };
 };
 
 interface Profile {
@@ -141,7 +204,7 @@ export default function AdminDashboard() {
       formData.append('image', compressedFile, compressedFile.name || 'bg.jpg');
 
       setMessage({ text: 'Uploading...', type: 'success' });
-      const data = await uploadToSupabase(compressedFile, 'bg');
+      const data = await uploadImageClientSide(compressedFile, 'bg');
 
       setSettingsForm(prev => ({ ...prev, bg_image_url: data.url }));
       setSettingsMessage({ text: 'Wallpaper uploaded!', type: 'success' });
@@ -524,7 +587,7 @@ export default function AdminDashboard() {
       formData.append('image', compressedFile, compressedFile.name || 'avatar.jpg');
       
       setMessage({ text: 'Uploading...', type: 'success' });
-      const data = await uploadToSupabase(compressedFile, 'avatar');
+      const data = await uploadImageClientSide(compressedFile, 'avatar');
       
       const { error } = await supabase.from('profiles').update({ avatar_url: data.url }).eq('id', user?.id!);
       if (error) throw error;
@@ -565,7 +628,7 @@ export default function AdminDashboard() {
       formData.append('image', compressedFile, compressedFile.name || 'tool-image.jpg');
       
       setToolMessage({ text: 'Uploading...', type: 'success' });
-      const data = await uploadToSupabase(compressedFile, 'tool-image');
+      const data = await uploadImageClientSide(compressedFile, 'tool-image');
       setToolForm(prev => ({ ...prev, image_url: data.url }));
       setToolMessage({ text: 'Image uploaded successfully!', type: 'success' });
     } catch (err: any) {
@@ -1321,7 +1384,7 @@ export default function AdminDashboard() {
                                             formData.append('file', file);
                                             
                                             setMessage({ text: 'Uploading...', type: 'success' });
-                                            const data = await uploadToSupabase(file, 'media');
+                                            const data = await uploadMediaClientSide(file, 'media');
                                             
                                             setMessage({ text: 'Syncing with database...', type: 'success' });
                                             const { data: toolRecord, error: dbError } = await supabase.from('tools').insert([{

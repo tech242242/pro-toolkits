@@ -1372,24 +1372,26 @@ export default function AdminDashboard() {
                </div>
              )}
          </div>
-         {isOwner && (
-            <div className="flex flex-wrap sm:flex-nowrap gap-2 md:gap-4 items-center w-full md:w-auto mt-4 md:mt-0">
-               <button onClick={() => window.open(`/${pageProfile.username}`, '_blank')} className="flex-1 sm:flex-none justify-center px-4 py-3 rounded-xl bg-emerald-600/10 border border-emerald-500/20 hover:bg-emerald-600/20 hover:border-emerald-500 text-emerald-400 backdrop-blur-md transition-all shadow-lg flex items-center gap-2" title="Launch Public Page">
+          {isOwner && (
+            <div className="flex flex-wrap sm:flex-nowrap gap-2 md:gap-4 items-center w-full md:w-auto mt-4 md:mt-0 px-1">
+               <button onClick={() => window.open(`/${pageProfile.username}`, '_blank')} className="flex-1 sm:flex-none justify-center px-4 py-3 rounded-xl bg-emerald-600/20 border border-emerald-500/40 hover:bg-emerald-600/30 hover:border-emerald-500 text-emerald-400 backdrop-blur-md transition-all shadow-xl flex items-center gap-2" title="Launch Public Page">
                   <Globe className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-                  <span className="text-xs font-bold uppercase tracking-wider">Launch</span>
+                  <span className="text-xs font-black uppercase tracking-widest">Launch</span>
                </button>
-               <button onClick={openSettings} className="p-3 shrink-0 rounded-xl bg-white/[0.05] border border-white/10 hover:border-purple-400 hover:text-purple-300 text-zinc-300 backdrop-blur-md transition-all shadow-sm" title="Settings">
-                  <Settings className="w-5 h-5" />
-               </button>
-               <button 
-                  onClick={handleSignOut} 
-                  className="p-3 shrink-0 rounded-xl bg-red-500/10 border border-red-500/20 hover:border-red-500 hover:text-red-400 text-red-300 backdrop-blur-md transition-all shadow-sm"
-                  title="Logout"
-               >
-                  <LogOut className="w-5 h-5" />
-               </button>
+               <div className="flex gap-2">
+                 <button onClick={openSettings} className="p-3 shrink-0 rounded-xl bg-white/[0.05] border border-white/10 hover:border-purple-400 hover:text-purple-300 text-zinc-300 backdrop-blur-md transition-all shadow-sm" title="Settings">
+                    <Settings className="w-5 h-5" />
+                 </button>
+                 <button 
+                    onClick={handleSignOut} 
+                    className="p-3 shrink-0 rounded-xl bg-red-500/10 border border-red-500/20 hover:border-red-500 hover:text-red-400 text-red-300 backdrop-blur-md transition-all shadow-sm"
+                    title="Logout"
+                 >
+                    <LogOut className="w-5 h-5" />
+                 </button>
+               </div>
                <label className="cursor-pointer flex-1 sm:flex-none justify-center bg-white/[0.05] border border-white/10 hover:border-purple-400 text-[10px] md:text-sm font-medium px-4 md:px-5 py-3 rounded-xl text-zinc-400 hover:text-purple-300 transition-all flex items-center gap-2 backdrop-blur-md shadow-sm whitespace-nowrap uppercase tracking-widest font-black">
-                  <UploadCloud className="w-4 h-4 shrink-0" />
+                  <UploadCloud className="w-3 h-3 md:w-4 md:h-4 shrink-0" />
                   <span>{uploading ? '...' : 'Avatar'}</span>
                   <input type="file" className="hidden" accept="image/*" onChange={handleDpUpload} ref={dpInputRef} disabled={uploading} />
                </label>
@@ -1409,6 +1411,25 @@ export default function AdminDashboard() {
             </div>
          )}
       </div>
+
+      {/* Floating Add Button for Mobile */}
+      {isOwner && (
+        <button 
+          onClick={() => {
+            if (activeMainTab === 'tools') openToolModal();
+            else if (activeMainTab === 'shortlinks') openShortLinkModal();
+            else if (activeMainTab === 'portfolios') openPortfolioModal();
+            else {
+                setUploadStep(1);
+                setMediaName('');
+                setIsUploadModalOpen(true);
+            }
+          }}
+          className="md:hidden fixed bottom-6 left-6 z-[80] w-14 h-14 bg-gradient-to-tr from-purple-600 to-indigo-600 text-white rounded-full shadow-[0_10px_25px_rgba(124,58,237,0.5)] flex items-center justify-center border border-white/20 active:scale-95 transition-transform"
+        >
+          <Plus className="w-6 h-6" />
+        </button>
+      )}
 
       {message && (
          <div className={`p-4 rounded-xl mb-6 text-sm text-center border backdrop-blur-md relative z-10 ${message.type === 'error' ? 'bg-red-500/10 border-red-500/30 text-red-200' : 'bg-green-500/10 border-green-500/30 text-green-200'}`}>

@@ -50,6 +50,15 @@ export default function DynamicManifest({ name, icon, username }: Props) {
     // Update document title for extra polish
     document.title = manifestName;
 
+    // Update theme color meta tag
+    let themeMeta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement;
+    if (!themeMeta) {
+      themeMeta = document.createElement('meta');
+      themeMeta.name = 'theme-color';
+      document.head.appendChild(themeMeta);
+    }
+    themeMeta.content = manifest.theme_color;
+
     return () => {
       URL.revokeObjectURL(url);
     };

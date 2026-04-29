@@ -462,7 +462,7 @@ export default function PublicView() {
           </GlowWrapper>
 
           {/* Categories Filter */}
-          <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+          <div className="flex flex-wrap gap-3 justify-center md:justify-start mt-4">
               {displayCategories.map(cat => (
                   <button 
                       key={cat}
@@ -479,7 +479,7 @@ export default function PublicView() {
           </div>
 
           {/* Tools Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-8 mt-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 md:gap-8 mt-6">
               {filteredTools.map((tool) => (
                   <div key={tool.id} className="flex flex-col items-center group relative">
                       <GlowWrapper 

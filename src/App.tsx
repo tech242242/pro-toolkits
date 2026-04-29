@@ -8,7 +8,7 @@ import PWAInstallButton from './components/PWAInstallButton';
 // Lazy load pages for faster initial rendering (Code Splitting)
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const AdminDashboard = lazy(() => import('./pages/admin-dashboard/AdminDashboard'));
 const PublicView = lazy(() => import('./pages/PublicView'));
 const MediaDownload = lazy(() => import('./pages/MediaDownload'));
 const ShortLinkRedirect = lazy(() => import('./pages/ShortLinkRedirect'));

@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Download, Share2, Heart, ArrowLeft, Star, Shield, Info, Check, ExternalLink, File, Lock, MessageSquare, CheckCircle, X, FileArchive, Music2, Video, FileCode, FileText } from 'lucide-react';
 import { SocialButton, RenderSocialIcon, GlassSocialIcon } from '../components/SocialIcons';
+import DynamicManifest from '../components/DynamicManifest';
 
 export default function MediaDownload() {
   const { username, toolId, filename } = useParams();
@@ -365,7 +366,11 @@ export default function MediaDownload() {
 
   return (
     <div className="bg-[#030014] min-h-[100dvh] text-[#F0F0F0] font-sans relative pb-20 w-full">
-      
+      <DynamicManifest 
+        name={tool.name} 
+        icon={tool.image_url || profile?.avatar_url || 'https://i.pinimg.com/736x/db/5e/0a/db5e0ab846238200926faca796937740.jpg'}
+        username={username}
+      />
       {/* Background Animated Gradients / Orbs */}
       <div className="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-700/20 blur-[120px] -z-10 animate-pulse mix-blend-screen pointer-events-none"></div>
       <div className="fixed bottom-[-10%] right-[-5%] w-[30%] h-[30%] rounded-full bg-indigo-600/20 blur-[100px] -z-10 mix-blend-screen pointer-events-none"></div>

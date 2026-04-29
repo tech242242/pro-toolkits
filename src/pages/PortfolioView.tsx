@@ -20,6 +20,7 @@ import {
   Phone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import DynamicManifest from '../components/DynamicManifest';
 
 interface PortfolioData {
   id: string;
@@ -147,6 +148,11 @@ export default function PortfolioView() {
 
   return (
     <div className="min-h-screen bg-[#F2F2F7] font-sans text-[#1d1d1f] overflow-x-hidden selection:bg-blue-200">
+      <DynamicManifest 
+        name={portfolio.title} 
+        icon={portfolio.main_image_url} 
+        username={username}
+      />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
         .font-outfit { font-family: 'Outfit', sans-serif; }

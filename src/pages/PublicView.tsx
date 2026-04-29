@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { Shield, User as UserIcon, Search, Megaphone, Lock, MessageSquare, ExternalLink, CheckCircle, X, Globe, Mail, Send, Share2, Eye, Users, UserPlus, UserCheck, Activity, FileArchive, Music2, Video, FileCode, FileText } from 'lucide-react';
 import { SocialButton, RenderSocialIcon, GlassSocialIcon } from '../components/SocialIcons';
 import { GlowWrapper } from '../components/GlowWrapper';
+import DynamicManifest from '../components/DynamicManifest';
 
 interface Tool {
   id: string;
@@ -323,6 +324,11 @@ export default function PublicView() {
         color: pageProfile.theme_text_color || '#F0F0F0'
       }}
     >
+      <DynamicManifest 
+        name={pageProfile.username || 'Tool Kit Pro'} 
+        icon={pageProfile.avatar_url || 'https://i.pinimg.com/736x/db/5e/0a/db5e0ab846238200926faca796937740.jpg'}
+        username={pageProfile.username}
+      />
       {/* Full Screen Background Wrapper */}
       <div 
         className="fixed inset-0 animate-in fade-in duration-700 pointer-events-none"

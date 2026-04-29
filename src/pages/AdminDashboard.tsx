@@ -1276,8 +1276,8 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      <div className={`flex flex-col animate-in fade-in duration-700 w-full relative z-10 pb-28 md:pb-12 ${isOwner ? 'pt-20' : ''}`}>
-        <div className="mb-12 border-b border-white/10 pb-8 flex flex-col md:flex-row items-start justify-between gap-6 relative z-10 w-full overflow-hidden">
+      <div className={`flex flex-col animate-in fade-in duration-500 w-full relative z-10 pb-28 md:pb-12 ${isOwner ? 'pt-16 sm:pt-20' : ''}`}>
+        <div className="mb-8 sm:mb-12 border-b border-white/10 pb-6 sm:pb-8 flex flex-col md:flex-row items-start justify-between gap-6 relative z-10 w-full overflow-hidden">
          <div className="w-full md:w-auto">
              <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2 flex items-center gap-3 md:gap-4 overflow-hidden">
                 <GlowWrapper 
@@ -1373,20 +1373,24 @@ export default function AdminDashboard() {
              )}
          </div>
          {isOwner && (
-            <div className="flex flex-wrap sm:flex-nowrap gap-3 md:gap-4 items-center w-full md:w-auto mt-2 md:mt-0">
-               <button onClick={openSettings} className="p-3 shrink-0 rounded-xl bg-white/[0.05] border border-white/10 hover:border-purple-400 hover:text-purple-300 text-zinc-300 backdrop-blur-md transition-all shadow-[0_0_15px_rgba(0,0,0,0.5)]" title="Settings">
+            <div className="flex flex-wrap sm:flex-nowrap gap-2 md:gap-4 items-center w-full md:w-auto mt-4 md:mt-0">
+               <button onClick={() => window.open(`/${pageProfile.username}`, '_blank')} className="flex-1 sm:flex-none justify-center px-4 py-3 rounded-xl bg-emerald-600/10 border border-emerald-500/20 hover:bg-emerald-600/20 hover:border-emerald-500 text-emerald-400 backdrop-blur-md transition-all shadow-lg flex items-center gap-2" title="Launch Public Page">
+                  <Globe className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Launch</span>
+               </button>
+               <button onClick={openSettings} className="p-3 shrink-0 rounded-xl bg-white/[0.05] border border-white/10 hover:border-purple-400 hover:text-purple-300 text-zinc-300 backdrop-blur-md transition-all shadow-sm" title="Settings">
                   <Settings className="w-5 h-5" />
                </button>
                <button 
                   onClick={handleSignOut} 
-                  className="p-3 shrink-0 rounded-xl bg-red-500/10 border border-red-500/20 hover:border-red-500 hover:text-red-400 text-red-300 backdrop-blur-md transition-all shadow-[0_0_15px_rgba(0,0,0,0.5)]"
+                  className="p-3 shrink-0 rounded-xl bg-red-500/10 border border-red-500/20 hover:border-red-500 hover:text-red-400 text-red-300 backdrop-blur-md transition-all shadow-sm"
                   title="Logout"
                >
                   <LogOut className="w-5 h-5" />
                </button>
-               <label className="cursor-pointer flex-1 sm:flex-none justify-center bg-white/[0.05] border border-white/10 hover:border-purple-400 text-sm font-medium px-4 md:px-5 py-3 rounded-xl text-zinc-300 hover:text-purple-300 transition-all flex items-center gap-2 backdrop-blur-md shadow-[0_0_15px_rgba(0,0,0,0.5)] whitespace-nowrap">
-                  <UploadCloud className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-                  <span>{uploading ? 'Uploading...' : 'Update Avatar'}</span>
+               <label className="cursor-pointer flex-1 sm:flex-none justify-center bg-white/[0.05] border border-white/10 hover:border-purple-400 text-[10px] md:text-sm font-medium px-4 md:px-5 py-3 rounded-xl text-zinc-400 hover:text-purple-300 transition-all flex items-center gap-2 backdrop-blur-md shadow-sm whitespace-nowrap uppercase tracking-widest font-black">
+                  <UploadCloud className="w-4 h-4 shrink-0" />
+                  <span>{uploading ? '...' : 'Avatar'}</span>
                   <input type="file" className="hidden" accept="image/*" onChange={handleDpUpload} ref={dpInputRef} disabled={uploading} />
                </label>
                <button onClick={() => {
@@ -1398,10 +1402,8 @@ export default function AdminDashboard() {
                         setMediaName('');
                         setIsUploadModalOpen(true);
                     }
-                }} className="flex-1 sm:flex-none justify-center bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 border border-purple-400/50 text-white text-sm font-medium px-4 md:px-5 py-3 rounded-xl transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:-translate-y-0.5 whitespace-nowrap">
+                }} className="hidden md:flex flex-1 sm:flex-none justify-center bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 border border-purple-400/50 text-white text-sm font-medium px-4 md:px-5 py-3 rounded-xl transition-all items-center gap-2 shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:-translate-y-0.5 whitespace-nowrap">
                   <Plus className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-                  {/* Uploads Data Tab Button */}
-                  
                   <span>{activeMainTab === 'tools' ? 'Add Tool' : activeMainTab === 'shortlinks' ? 'Add Link' : activeMainTab === 'portfolios' ? 'Add Portfolio' : 'Add Content'}</span>
                </button>
             </div>
@@ -1418,6 +1420,13 @@ export default function AdminDashboard() {
       <div className="w-full max-w-5xl mx-auto flex flex-col gap-6 relative z-10 pt-4">
           
           {/* Main Tab Switcher */}
+          <div className="md:hidden flex items-center justify-between gap-1 p-1 bg-white/[0.03] backdrop-blur-xl border border-white/5 rounded-2xl w-full mb-2 overflow-x-auto no-scrollbar scroll-smooth">
+              <button onClick={() => setActiveMainTab('tools')} className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeMainTab === 'tools' ? 'bg-purple-600 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-400'}`}>Tools</button>
+              <button onClick={() => setActiveMainTab('uploads')} className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeMainTab === 'uploads' ? 'bg-pink-600 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-400'}`}>Media</button>
+              <button onClick={() => setActiveMainTab('portfolios')} className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeMainTab === 'portfolios' ? 'bg-emerald-600 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-400'}`}>Folio</button>
+              <button onClick={() => setActiveMainTab('shortlinks')} className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeMainTab === 'shortlinks' ? 'bg-indigo-600 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-400'}`}>Links</button>
+          </div>
+
           <div className="hidden md:flex items-center justify-center gap-2 p-1.5 bg-white/[0.03] backdrop-blur-xl border border-white/5 rounded-2xl w-fit mx-auto shadow-2xl">
               <button 
                 onClick={() => setActiveMainTab('tools')}
@@ -1530,7 +1539,7 @@ export default function AdminDashboard() {
           )}
 
           {activeMainTab === 'tools' ? (
-            <>
+            <div className="animate-in fade-in slide-in-from-right-2 duration-150">
               {/* Search Bar */}
               <GlowWrapper 
                   enabled={pageProfile.theme_search_border} 
@@ -1639,9 +1648,9 @@ export default function AdminDashboard() {
                       </div>
                   )}
               </div>
-            </>
+            </div>
           ) : activeMainTab === 'uploads' ? (
-            <div className="flex flex-col items-center py-8 md:py-16 px-4 max-w-4xl mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex flex-col items-center py-4 md:py-16 px-4 max-w-4xl mx-auto w-full animate-in fade-in slide-in-from-bottom-2 duration-150">
                 <div className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 p-6 md:p-10 rounded-[2.5rem] w-full shadow-2xl relative overflow-hidden">
                     {/* Progress Bar */}
                     <div className="absolute top-0 left-0 w-full h-1 bg-white/5">
@@ -1921,7 +1930,7 @@ export default function AdminDashboard() {
                 </div>
             </div>
           ) : (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="animate-in fade-in slide-in-from-right-2 duration-150">
                {/* Mobile Cards / Desktop Table */}
                <div className="hidden md:block bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
                   <table className="w-full text-left border-collapse">

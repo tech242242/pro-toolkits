@@ -59,9 +59,8 @@ import {
   uploadVideoClientSide,
   uploadImageClientSide,
 } from "./utils";
-import { Profile, Tool, ShortLink, Portfolio, SimDatabase, SmsBomber } from "./types";
+import { Profile, Tool, ShortLink, Portfolio, SimDatabase } from "./types";
 import { CustomToolsTab } from "./components/tabs/CustomToolsTab";
-import { SmsBomberModal } from "./components/modals/SmsBomberModal";
 
 export default function AdminDashboard() {
   const { username } = useParams();
@@ -229,29 +228,13 @@ export default function AdminDashboard() {
     theme_color: "#00E5FF",
     font_family: "sans",
     bg_image_url: "",
+    main_website_link: "",
   });
   const [simDbMessage, setSimDbMessage] = useState<{
     text: string;
     type: "error" | "success";
   } | null>(null);
   const [simDbLoading, setSimDbLoading] = useState(false);
-
-  // Sms Bomber State
-  const [smsBombers, setSmsBombers] = useState<SmsBomber[]>([]);
-  const [isSmsBomberModalOpen, setIsSmsBomberModalOpen] = useState(false);
-  const [editingSmsBomber, setEditingSmsBomber] = useState<SmsBomber | null>(null);
-  const [smsBomberForm, setSmsBomberForm] = useState({
-    admin_username: "",
-    name: "",
-    channel_link: "",
-    whatsapp_number: "",
-    theme_color: "#FF0000",
-  });
-  const [smsBomberMessage, setSmsBomberMessage] = useState<{
-    text: string;
-    type: "error" | "success";
-  } | null>(null);
-  const [smsBomberLoading, setSmsBomberLoading] = useState(false);
 
   // New: Data Upload Modal State
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -350,7 +333,6 @@ export default function AdminDashboard() {
           fetchShortLinks(data.id);
           fetchPortfolios(data.id);
           fetchSimDatabases(data.id);
-          fetchSmsBombers(data.id);
         } else {
           setPageProfile(null);
           console.error("Profile fetch error:", error);
@@ -402,82 +384,6 @@ export default function AdminDashboard() {
       .eq("profile_id", profileId)
       .order("created_at", { ascending: false });
     if (data && !error) setSimDatabases(data);
-  };
-
-  const fetchSmsBombers = async (profileId: string) => {
-    const { data } = await supabase
-      .from("sms_bombers")
-      .select("*")
-      .eq("profile_id", profileId);
-    if (data) setSmsBombers(data);
-  };
-
-  const openSmsBomberModal = (sms?: SmsBomber) => {
-    setSmsBomberMessage(null);
-    if (sms) {
-      setEditingSmsBomber(sms);
-      setSmsBomberForm({
-        admin_username: sms.admin_username,
-        name: sms.name,
-        channel_link: sms.channel_link || "",
-        whatsapp_number: sms.whatsapp_number || "",
-        theme_color: sms.theme_color || "#FF0000",
-      });
-    } else {
-      setEditingSmsBomber(null);
-      setSmsBomberForm({
-        admin_username: "",
-        name: "",
-        channel_link: "",
-        whatsapp_number: "",
-        theme_color: "#FF0000",
-      });
-    }
-    setIsSmsBomberModalOpen(true);
-  };
-
-  const saveSmsBomber = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSmsBomberMessage(null);
-    setSmsBomberLoading(true);
-    if (!smsBomberForm.admin_username || !smsBomberForm.name) {
-      setSmsBomberMessage({ text: "Admin Username and Name are required.", type: "error" });
-      setSmsBomberLoading(false);
-      return;
-    }
-    const cleanUsername = smsBomberForm.admin_username.toLowerCase().replace(/[^a-z0-9_-]/g, "");
-    try {
-      const payload = {
-        profile_id: pageProfile.id,
-        admin_username: cleanUsername,
-        name: smsBomberForm.name,
-        channel_link: smsBomberForm.channel_link,
-        whatsapp_number: smsBomberForm.whatsapp_number,
-        theme_color: smsBomberForm.theme_color,
-      };
-      if (editingSmsBomber) {
-        const { error } = await supabase.from("sms_bombers").update(payload).eq("id", editingSmsBomber.id);
-        if (error) throw error;
-        setSmsBomberMessage({ text: "SMS Bomber updated!", type: "success" });
-      } else {
-        const { error } = await supabase.from("sms_bombers").insert(payload);
-        if (error) throw error;
-        setSmsBomberMessage({ text: "SMS Bomber created!", type: "success" });
-      }
-      fetchSmsBombers(pageProfile.id);
-      setTimeout(() => setIsSmsBomberModalOpen(false), 800);
-    } catch (err: any) {
-      setSmsBomberMessage({ text: err.message, type: "error" });
-    } finally {
-      setSmsBomberLoading(false);
-    }
-  };
-
-  const deleteSmsBomber = async (id: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!window.confirm("Delete this SMS Bomber?")) return;
-    const { error } = await supabase.from("sms_bombers").delete().eq("id", id);
-    if (!error) fetchSmsBombers(pageProfile.id);
   };
 
   const openPortfolioModal = (port?: Portfolio) => {
@@ -603,6 +509,7 @@ export default function AdminDashboard() {
         theme_color: db.theme_color || "#00E5FF",
         font_family: db.font_family || "sans",
         bg_image_url: db.bg_image_url || "",
+        main_website_link: db.main_website_link || "", // Added
       });
     } else {
       setEditingSimDb(null);
@@ -614,23 +521,23 @@ export default function AdminDashboard() {
         theme_color: "#00E5FF",
         font_family: "sans",
         bg_image_url: "",
+        main_website_link: "", // Added
       });
     }
     setIsSimDbModalOpen(true);
   };
 
-  const saveSimDb = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const saveSimDb = async (formData: any) => {
     setSimDbMessage(null);
     setSimDbLoading(true);
 
-    if (!simDbForm.admin_username || !simDbForm.name) {
+    if (!formData.admin_username || !formData.name) {
       setSimDbMessage({ text: "Admin Username and Name are required.", type: "error" });
       setSimDbLoading(false);
       return;
     }
 
-    const cleanUsername = simDbForm.admin_username
+    const cleanUsername = formData.admin_username
       .toLowerCase()
       .replace(/[^a-z0-9_-]/g, "");
 
@@ -638,12 +545,13 @@ export default function AdminDashboard() {
       const payload = {
         profile_id: pageProfile.id,
         admin_username: cleanUsername,
-        name: simDbForm.name,
-        channel_link: simDbForm.channel_link,
-        whatsapp_number: simDbForm.whatsapp_number,
-        theme_color: simDbForm.theme_color,
-        font_family: simDbForm.font_family,
-        bg_image_url: simDbForm.bg_image_url,
+        name: formData.name,
+        channel_link: formData.channel_link,
+        whatsapp_number: formData.whatsapp_number,
+        theme_color: formData.theme_color,
+        font_family: formData.font_family,
+        bg_image_url: formData.bg_image_url,
+        main_website_link: formData.main_website_link,
       };
 
       if (editingSimDb) {
@@ -679,7 +587,6 @@ export default function AdminDashboard() {
     const { error } = await supabase.from("sim_databases").delete().eq("id", id);
     if (!error) fetchSimDatabases(pageProfile.id);
   };
-
 
   const openShortLinkModal = (link?: ShortLink) => {
     setShortLinkMessage(null);
@@ -2708,9 +2615,6 @@ export default function AdminDashboard() {
               simDatabases={simDatabases}
               openSimDbModal={openSimDbModal}
               deleteSimDb={deleteSimDb}
-              smsBombers={smsBombers}
-              openSmsBomberModal={openSmsBomberModal}
-              deleteSmsBomber={deleteSmsBomber}
               handleCopyLink={handleCopyLink}
             />
           )}
@@ -2745,7 +2649,7 @@ export default function AdminDashboard() {
                   </div>
                 )}
 
-                <form onSubmit={saveSimDb} className="space-y-6 pb-4">
+                <form onSubmit={(e) => { e.preventDefault(); saveSimDb(simDbForm); }} className="space-y-6 pb-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="flex flex-col gap-2">
                       <label className="text-sm font-light text-zinc-300 ml-1">

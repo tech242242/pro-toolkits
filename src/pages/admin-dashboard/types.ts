@@ -95,17 +95,7 @@ export interface SimDatabase {
   theme_color: string;
   font_family: string;
   bg_image_url?: string;
+  main_website_link?: string;
   views_count: number;
-  created_at: string;
-}
-
-export interface SmsBomber {
-  id: string;
-  profile_id: string;
-  admin_username: string; // The URL slug will be mydomain.com/sb/admin_username
-  name: string;
-  channel_link?: string;
-  whatsapp_number?: string;
-  theme_color: string;
   created_at: string;
 }

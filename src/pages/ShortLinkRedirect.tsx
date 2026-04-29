@@ -125,7 +125,7 @@ export default function ShortLinkRedirect() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1. Fetch profile
+        // Parallel data fetch attempt
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -139,21 +139,24 @@ export default function ShortLinkRedirect() {
         }
         setProfile(profileData);
 
-        // 2. Fetch short link
-        const { data: linkData, error: linkError } = await supabase
-          .from('short_links')
-          .select('id, profile_id, slug, target_url, is_locked, password, is_gated, gated_icon, gated_social_url, gated_description, gated_button_text')
-          .eq('profile_id', profileData.id)
-          .eq('slug', slug)
-          .single();
+        // Fetch link and follow status in parallel
+        const [linkRes, followStatus] = await Promise.all([
+          supabase.from('short_links')
+            .select('id, profile_id, slug, target_url, is_locked, password, is_gated, gated_icon, gated_social_url, gated_description, gated_button_text')
+            .eq('profile_id', profileData.id)
+            .eq('slug', slug)
+            .maybeSingle(),
+          checkFollowStatus(profileData.id)
+        ]);
 
-        if (linkError || !linkData) {
+        const linkData = linkRes.data;
+
+        if (!linkData) {
           setError('Link not found');
           setLoading(false);
           return;
         }
         
-        // Ensure safe defaults for gated fields
         setShortLink({
           ...linkData,
           is_gated: linkData.is_gated ?? false,
@@ -162,20 +165,17 @@ export default function ShortLinkRedirect() {
           gated_description: linkData.gated_description ?? '',
           gated_button_text: linkData.gated_button_text ?? 'FOLLOW & UNLOCK'
         });
+
+        setIsFollowing(followStatus);
         setLoading(false);
 
-        // 3. Check for Gated Status
-        const followed = await checkFollowStatus(profileData.id);
-        
-        if (linkData.is_gated) {
-          setIsGated(true);
-          setLoading(false);
-          // Don't auto-redirect, show popup instead
-          setTimeout(() => setShowFollowPopup(true), 1200);
-          return;
+        if (linkData.is_gated && !followStatus) {
+            setIsGated(true);
+            setTimeout(() => setShowFollowPopup(true), 600);
+            return;
         }
 
-        // 4. Redirect if not locked (will handle gated follow check implicitly by reaching here)
+        // Redirect if not locked
         if (!linkData.is_locked) {
           setIsUnlocked(true);
           startRedirect(linkData.target_url);

@@ -167,25 +167,29 @@ export default function PublicView() {
     const fetchPageData = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('username', username)
-          .single();
+        // Fetch profile and check follow status in parallel
+        const [profileRes, followRes] = await Promise.all([
+          supabase.from('profiles').select('*').eq('username', username).single(),
+          checkFollowStatusByUsername(username!)
+        ]);
           
-        if (data && !error) {
+        if (profileRes.data && !profileRes.error) {
+           const data = profileRes.data;
            setPageProfile(data);
-           fetchTools(data.id);
-           trackView(data.id);
-           checkFollowStatus(data.id);
+           setIsFollowing(followRes);
+           
+           // Fetch tools in parallel with view tracking
+           await Promise.all([
+             fetchTools(data.id),
+             trackView(data.id)
+           ]);
            
            // Setup popup timing
            if (data.popup_enabled) {
-              timer = setTimeout(() => setShowPopup(true), 1500);
+              timer = setTimeout(() => setShowPopup(true), 1000);
            }
         } else {
            setPageProfile(null);
-           console.error("Profile fetch error:", error);
         }
       } catch (err) {
         console.error("Unexpected error in fetchPageData:", err);
@@ -213,6 +217,22 @@ export default function PublicView() {
     const ua = navigator.userAgent;
     const screenInfo = `${window.screen.width}x${window.screen.height}`;
     return btoa(`${ua}-${screenInfo}`);
+  };
+
+  const checkFollowStatusByUsername = async (uname: string) => {
+    const visitorHash = getVisitorId();
+    // First get the profile ID for this username
+    const { data: p } = await supabase.from('profiles').select('id').eq('username', uname).single();
+    if (!p) return false;
+    
+    const { data: followData } = await supabase
+      .from('page_visitors')
+      .select('is_following')
+      .eq('profile_id', p.id)
+      .eq('visitor_hash', visitorHash)
+      .maybeSingle();
+    
+    return !!followData?.is_following;
   };
 
   const trackView = async (profile_id: string) => {

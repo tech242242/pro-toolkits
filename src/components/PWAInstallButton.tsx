@@ -24,6 +24,12 @@ export default function PWAInstallButton() {
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
+    window.addEventListener('appinstalled', () => {
+      setDeferredPrompt(null);
+      setIsVisible(false);
+      setIsStandalone(true);
+      console.log('PWA was installed');
+    });
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);

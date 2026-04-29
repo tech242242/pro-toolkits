@@ -19,20 +19,22 @@ export default function DynamicManifest({ name, icon, username }: Props) {
       description: `Official Tool Kit Space for ${username || name}`,
       start_url: window.location.pathname + window.location.search,
       display: "standalone",
+      orientation: "portrait",
       background_color: "#0A0F1E",
       theme_color: "#A855F7",
+      prefer_related_applications: false,
       icons: [
         {
           src: icon,
           sizes: "192x192",
           type: icon.includes('.png') ? 'image/png' : 'image/jpeg',
-          purpose: "any maskable"
+          purpose: "any"
         },
         {
           src: icon,
           sizes: "512x512",
           type: icon.includes('.png') ? 'image/png' : 'image/jpeg',
-          purpose: "any maskable"
+          purpose: "maskable"
         }
       ]
     };

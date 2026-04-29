@@ -59,7 +59,9 @@ import {
   uploadVideoClientSide,
   uploadImageClientSide,
 } from "./utils";
-import { Profile, Tool, ShortLink, Portfolio } from "./types";
+import { Profile, Tool, ShortLink, Portfolio, SimDatabase, SmsBomber } from "./types";
+import { CustomToolsTab } from "./components/tabs/CustomToolsTab";
+import { SmsBomberModal } from "./components/modals/SmsBomberModal";
 
 export default function AdminDashboard() {
   const { username } = useParams();
@@ -215,6 +217,42 @@ export default function AdminDashboard() {
   const [portfolioImageUploading, setPortfolioImageUploading] = useState(false);
   const portfolioInputRef = useRef<HTMLInputElement>(null);
 
+  // Sim Database State
+  const [simDatabases, setSimDatabases] = useState<SimDatabase[]>([]);
+  const [isSimDbModalOpen, setIsSimDbModalOpen] = useState(false);
+  const [editingSimDb, setEditingSimDb] = useState<SimDatabase | null>(null);
+  const [simDbForm, setSimDbForm] = useState({
+    admin_username: "",
+    name: "",
+    channel_link: "",
+    whatsapp_number: "",
+    theme_color: "#00E5FF",
+    font_family: "sans",
+    bg_image_url: "",
+  });
+  const [simDbMessage, setSimDbMessage] = useState<{
+    text: string;
+    type: "error" | "success";
+  } | null>(null);
+  const [simDbLoading, setSimDbLoading] = useState(false);
+
+  // Sms Bomber State
+  const [smsBombers, setSmsBombers] = useState<SmsBomber[]>([]);
+  const [isSmsBomberModalOpen, setIsSmsBomberModalOpen] = useState(false);
+  const [editingSmsBomber, setEditingSmsBomber] = useState<SmsBomber | null>(null);
+  const [smsBomberForm, setSmsBomberForm] = useState({
+    admin_username: "",
+    name: "",
+    channel_link: "",
+    whatsapp_number: "",
+    theme_color: "#FF0000",
+  });
+  const [smsBomberMessage, setSmsBomberMessage] = useState<{
+    text: string;
+    type: "error" | "success";
+  } | null>(null);
+  const [smsBomberLoading, setSmsBomberLoading] = useState(false);
+
   // New: Data Upload Modal State
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   // Removed diagnostic check for API connectivity to prevent 'Failed to fetch' error
@@ -283,7 +321,7 @@ export default function AdminDashboard() {
     "menu" | "profile" | "social" | "popup" | "security" | "theme"
   >("menu");
   const [activeMainTab, setActiveMainTab] = useState<
-    "tools" | "shortlinks" | "portfolios" | "uploads"
+    "tools" | "shortlinks" | "portfolios" | "uploads" | "custom_tools"
   >("tools");
 
   // Cropper State
@@ -311,6 +349,8 @@ export default function AdminDashboard() {
           fetchTools(data.id);
           fetchShortLinks(data.id);
           fetchPortfolios(data.id);
+          fetchSimDatabases(data.id);
+          fetchSmsBombers(data.id);
         } else {
           setPageProfile(null);
           console.error("Profile fetch error:", error);
@@ -353,6 +393,91 @@ export default function AdminDashboard() {
       .eq("profile_id", profileId)
       .order("created_at", { ascending: false });
     if (data && !error) setPortfolios(data);
+  };
+
+  const fetchSimDatabases = async (profileId: string) => {
+    const { data, error } = await supabase
+      .from("sim_databases")
+      .select("*")
+      .eq("profile_id", profileId)
+      .order("created_at", { ascending: false });
+    if (data && !error) setSimDatabases(data);
+  };
+
+  const fetchSmsBombers = async (profileId: string) => {
+    const { data } = await supabase
+      .from("sms_bombers")
+      .select("*")
+      .eq("profile_id", profileId);
+    if (data) setSmsBombers(data);
+  };
+
+  const openSmsBomberModal = (sms?: SmsBomber) => {
+    setSmsBomberMessage(null);
+    if (sms) {
+      setEditingSmsBomber(sms);
+      setSmsBomberForm({
+        admin_username: sms.admin_username,
+        name: sms.name,
+        channel_link: sms.channel_link || "",
+        whatsapp_number: sms.whatsapp_number || "",
+        theme_color: sms.theme_color || "#FF0000",
+      });
+    } else {
+      setEditingSmsBomber(null);
+      setSmsBomberForm({
+        admin_username: "",
+        name: "",
+        channel_link: "",
+        whatsapp_number: "",
+        theme_color: "#FF0000",
+      });
+    }
+    setIsSmsBomberModalOpen(true);
+  };
+
+  const saveSmsBomber = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSmsBomberMessage(null);
+    setSmsBomberLoading(true);
+    if (!smsBomberForm.admin_username || !smsBomberForm.name) {
+      setSmsBomberMessage({ text: "Admin Username and Name are required.", type: "error" });
+      setSmsBomberLoading(false);
+      return;
+    }
+    const cleanUsername = smsBomberForm.admin_username.toLowerCase().replace(/[^a-z0-9_-]/g, "");
+    try {
+      const payload = {
+        profile_id: pageProfile.id,
+        admin_username: cleanUsername,
+        name: smsBomberForm.name,
+        channel_link: smsBomberForm.channel_link,
+        whatsapp_number: smsBomberForm.whatsapp_number,
+        theme_color: smsBomberForm.theme_color,
+      };
+      if (editingSmsBomber) {
+        const { error } = await supabase.from("sms_bombers").update(payload).eq("id", editingSmsBomber.id);
+        if (error) throw error;
+        setSmsBomberMessage({ text: "SMS Bomber updated!", type: "success" });
+      } else {
+        const { error } = await supabase.from("sms_bombers").insert(payload);
+        if (error) throw error;
+        setSmsBomberMessage({ text: "SMS Bomber created!", type: "success" });
+      }
+      fetchSmsBombers(pageProfile.id);
+      setTimeout(() => setIsSmsBomberModalOpen(false), 800);
+    } catch (err: any) {
+      setSmsBomberMessage({ text: err.message, type: "error" });
+    } finally {
+      setSmsBomberLoading(false);
+    }
+  };
+
+  const deleteSmsBomber = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!window.confirm("Delete this SMS Bomber?")) return;
+    const { error } = await supabase.from("sms_bombers").delete().eq("id", id);
+    if (!error) fetchSmsBombers(pageProfile.id);
   };
 
   const openPortfolioModal = (port?: Portfolio) => {
@@ -465,6 +590,96 @@ export default function AdminDashboard() {
     const { error } = await supabase.from("portfolios").delete().eq("id", id);
     if (!error) fetchPortfolios(pageProfile.id);
   };
+
+  const openSimDbModal = (db?: SimDatabase) => {
+    setSimDbMessage(null);
+    if (db) {
+      setEditingSimDb(db);
+      setSimDbForm({
+        admin_username: db.admin_username,
+        name: db.name,
+        channel_link: db.channel_link || "",
+        whatsapp_number: db.whatsapp_number || "",
+        theme_color: db.theme_color || "#00E5FF",
+        font_family: db.font_family || "sans",
+        bg_image_url: db.bg_image_url || "",
+      });
+    } else {
+      setEditingSimDb(null);
+      setSimDbForm({
+        admin_username: pageProfile?.username || "",
+        name: "",
+        channel_link: "",
+        whatsapp_number: "",
+        theme_color: "#00E5FF",
+        font_family: "sans",
+        bg_image_url: "",
+      });
+    }
+    setIsSimDbModalOpen(true);
+  };
+
+  const saveSimDb = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSimDbMessage(null);
+    setSimDbLoading(true);
+
+    if (!simDbForm.admin_username || !simDbForm.name) {
+      setSimDbMessage({ text: "Admin Username and Name are required.", type: "error" });
+      setSimDbLoading(false);
+      return;
+    }
+
+    const cleanUsername = simDbForm.admin_username
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, "");
+
+    try {
+      const payload = {
+        profile_id: pageProfile.id,
+        admin_username: cleanUsername,
+        name: simDbForm.name,
+        channel_link: simDbForm.channel_link,
+        whatsapp_number: simDbForm.whatsapp_number,
+        theme_color: simDbForm.theme_color,
+        font_family: simDbForm.font_family,
+        bg_image_url: simDbForm.bg_image_url,
+      };
+
+      if (editingSimDb) {
+        const { error } = await supabase
+          .from("sim_databases")
+          .update(payload)
+          .eq("id", editingSimDb.id);
+        if (error) throw error;
+        setSimDbMessage({ text: "Sim Database updated!", type: "success" });
+      } else {
+        const { error } = await supabase.from("sim_databases").insert(payload);
+        if (error) throw error;
+        setSimDbMessage({ text: "Sim Database created!", type: "success" });
+      }
+
+      fetchSimDatabases(pageProfile.id);
+      setTimeout(() => setIsSimDbModalOpen(false), 800);
+    } catch (err: any) {
+      setSimDbMessage({
+        text: err.message.includes("unique")
+          ? "Username slug already exists"
+          : err.message,
+        type: "error",
+      });
+    } finally {
+      setSimDbLoading(false);
+    }
+  };
+
+  const deleteSimDb = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!window.confirm("Delete this Sim Database?")) return;
+    const { error } = await supabase.from("sim_databases").delete().eq("id", id);
+    if (!error) fetchSimDatabases(pageProfile.id);
+  };
+
 
   const openShortLinkModal = (link?: ShortLink) => {
     setShortLinkMessage(null);
@@ -1584,6 +1799,12 @@ export default function AdminDashboard() {
             >
               Links
             </button>
+            <button
+              onClick={() => setActiveMainTab("custom_tools")}
+              className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeMainTab === "custom_tools" ? "bg-cyan-600 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-400"}`}
+            >
+              Create Tool
+            </button>
           </div>
 
           <div className="hidden md:flex items-center justify-center gap-2 p-1.5 bg-white/[0.03] backdrop-blur-xl border border-white/5 rounded-2xl w-fit mx-auto shadow-2xl">
@@ -1614,6 +1835,13 @@ export default function AdminDashboard() {
             >
               <Globe className="w-4 h-4" />
               URL Convert
+            </button>
+            <button
+              onClick={() => setActiveMainTab("custom_tools")}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeMainTab === "custom_tools" ? "bg-cyan-600 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)]" : "text-zinc-400 hover:text-white hover:bg-white/5"}`}
+            >
+              <FileCode className="w-4 h-4" />
+              Create Tool
             </button>
           </div>
 
@@ -1726,7 +1954,7 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {activeMainTab === "tools" ? (
+          {activeMainTab === "tools" && (
             <div className="animate-in fade-in slide-in-from-right-2 duration-150">
               {/* Search Bar */}
               <GlowWrapper
@@ -1868,7 +2096,9 @@ export default function AdminDashboard() {
                 )}
               </div>
             </div>
-          ) : activeMainTab === "uploads" ? (
+          )}
+          
+          {activeMainTab === "uploads" && (
             <div className="flex flex-col items-center py-4 md:py-16 px-4 max-w-4xl mx-auto w-full animate-in fade-in slide-in-from-bottom-2 duration-150">
               <div className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 p-6 md:p-10 rounded-[2.5rem] w-full shadow-2xl relative overflow-hidden">
                 {/* Progress Bar */}
@@ -2276,7 +2506,9 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </div>
-          ) : (
+          )}
+          
+          {activeMainTab === "shortlinks" && (
             <div className="animate-in fade-in slide-in-from-right-2 duration-150">
               {/* Mobile Cards / Desktop Table */}
               <div className="hidden md:block bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
@@ -2466,11 +2698,199 @@ export default function AdminDashboard() {
                       Create your first link
                     </button>
                   </div>
-                </div>
+               </div>
               )}
             </div>
           )}
+
+          {activeMainTab === "custom_tools" && (
+            <CustomToolsTab
+              simDatabases={simDatabases}
+              openSimDbModal={openSimDbModal}
+              deleteSimDb={deleteSimDb}
+              smsBombers={smsBombers}
+              openSmsBomberModal={openSmsBomberModal}
+              deleteSmsBomber={deleteSmsBomber}
+              handleCopyLink={handleCopyLink}
+            />
+          )}
         </div>
+
+        {/* SimDb Form Modal */}
+        {isSimDbModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-[#050014]/80 backdrop-blur-xl"
+              onClick={() => setIsSimDbModalOpen(false)}
+            ></div>
+            <div className="relative bg-[#0F0A1F]/95 border border-cyan-500/30 w-full max-w-xl max-h-[90vh] flex flex-col shadow-[0_0_50px_rgba(6,182,212,0.15)] rounded-3xl animate-in zoom-in-95 duration-200 overflow-hidden">
+              <button
+                onClick={() => setIsSimDbModalOpen(false)}
+                className="absolute top-5 right-5 z-10 text-zinc-400 hover:text-white p-2 bg-white/5 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="p-6 md:p-8 flex-1 overflow-y-auto custom-scrollbar">
+                <h2 className="text-2xl font-semibold tracking-tight text-white mb-6 flex items-center gap-2">
+                  <FileCode className="w-6 h-6 text-cyan-400" />
+                  {editingSimDb ? "Edit Sim Database" : "New Sim Database"}
+                </h2>
+
+                {simDbMessage && (
+                  <div
+                    className={`mb-6 p-4 rounded-xl text-sm border ${simDbMessage.type === "error" ? "bg-red-500/10 border-red-500/30 text-red-200" : "bg-green-500/10 border-green-500/30 text-green-200"}`}
+                  >
+                    {simDbMessage.text}
+                  </div>
+                )}
+
+                <form onSubmit={saveSimDb} className="space-y-6 pb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-light text-zinc-300 ml-1">
+                        Admin Username (URL path: /db/name)
+                      </label>
+                      <input
+                        type="text"
+                        value={simDbForm.admin_username}
+                        onChange={(e) =>
+                          setSimDbForm({ ...simDbForm, admin_username: e.target.value })
+                        }
+                        placeholder="e.g. saqib"
+                        required
+                        className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-mono"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-light text-zinc-300 ml-1">
+                        Sim DB Tool Name
+                      </label>
+                      <input
+                        type="text"
+                        value={simDbForm.name}
+                        onChange={(e) =>
+                          setSimDbForm({ ...simDbForm, name: e.target.value })
+                        }
+                        placeholder="e.g. Saqib Zone"
+                        required
+                        className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-light text-zinc-300 ml-1">
+                        Channel Link (Optional)
+                      </label>
+                      <input
+                        type="url"
+                        value={simDbForm.channel_link}
+                        onChange={(e) =>
+                          setSimDbForm({ ...simDbForm, channel_link: e.target.value })
+                        }
+                        placeholder="https://whatsapp.com/channel/..."
+                        className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-mono text-sm"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-light text-zinc-300 ml-1">
+                        WhatsApp Number (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={simDbForm.whatsapp_number}
+                        onChange={(e) =>
+                          setSimDbForm({
+                            ...simDbForm,
+                            whatsapp_number: e.target.value,
+                          })
+                        }
+                        placeholder="e.g. +923001234567"
+                        className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* UI Customization */}
+                  <div className="border-t border-white/5 pt-6 space-y-6">
+                    <h3 className="text-lg font-bold text-white mb-2">
+                      Theme Customization
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-light text-zinc-300 ml-1">
+                          Theme Gradient / Color
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={simDbForm.theme_color || "#00E5FF"}
+                            onChange={(e) =>
+                              setSimDbForm({
+                                ...simDbForm,
+                                theme_color: e.target.value,
+                              })
+                            }
+                            className="w-full h-12 rounded-xl cursor-pointer outline-none border-0 p-0"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-light text-zinc-300 ml-1">
+                          Wallpapers Option
+                        </label>
+                        <div className="w-full max-w-full overflow-x-auto no-scrollbar pb-2">
+                          <div className="flex gap-2 w-max">
+                            <button
+                              type="button"
+                              onClick={() => setSimDbForm({ ...simDbForm, bg_image_url: "" })}
+                              className={`w-12 h-16 shrink-0 rounded-lg flex items-center justify-center border-2 transition-all ${
+                                !simDbForm.bg_image_url
+                                  ? "border-cyan-500 bg-white/10"
+                                  : "border-white/10 hover:border-white/30"
+                              }`}
+                            >
+                              <span className="text-xs font-bold text-zinc-500">None</span>
+                            </button>
+                            {WALLPAPER_TEMPLATES.map((url, i) => (
+                              <button
+                                type="button"
+                                key={i}
+                                onClick={() => setSimDbForm({ ...simDbForm, bg_image_url: url })}
+                                className={`w-12 h-16 shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
+                                  simDbForm.bg_image_url === url
+                                    ? "border-cyan-500 scale-105"
+                                    : "border-white/10 hover:border-white/30"
+                                }`}
+                              >
+                                <img src={url} alt="bg" className="w-full h-full object-cover" />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={simDbLoading}
+                    className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-white font-bold py-4 transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] flex items-center justify-center gap-2"
+                  >
+                    {simDbLoading ? (
+                      <Activity className="w-5 h-5 animate-spin" />
+                    ) : (
+                      "Save Database Tool"
+                    )}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Tool Form Modal */}
         {isModalOpen && (
@@ -5110,6 +5530,20 @@ export default function AdminDashboard() {
               </div>
               <span className="text-[9px] font-bold uppercase tracking-widest">
                 Links
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveMainTab("custom_tools")}
+              className={`flex flex-col items-center gap-1 flex-1 py-1 transition-all ${activeMainTab === "custom_tools" ? "text-cyan-400" : "text-zinc-500 hover:text-zinc-400"}`}
+            >
+              <div
+                className={`p-2 rounded-2xl transition-all ${activeMainTab === "custom_tools" ? "bg-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.2)]" : ""}`}
+              >
+                <FileCode size={20} />
+              </div>
+              <span className="text-[9px] font-bold uppercase tracking-widest">
+                Custom
               </span>
             </button>
           </div>

@@ -219,18 +219,11 @@ interface Portfolio {
 
 export default function AdminDashboard() {
   const { username } = useParams();
-  const { user, profile, loading: authLoading, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   
   const [pageProfile, setPageProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
-  // Redirect if not logged in
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/login', { replace: true });
-    }
-  }, [authLoading, user, navigate]);
   
   // DP Upload state
   const [uploading, setUploading] = useState(false);
@@ -704,18 +697,6 @@ export default function AdminDashboard() {
   const isOwner = (user?.id === pageProfile?.id) || ['mrsaqib242', 'mrsaqib243', 'ali', 'fahad'].includes(profile?.username || '');
   const isAdmin = ['mrsaqib242', 'mrsaqib243', 'ali', 'fahad'].includes(profile?.username || '');
   const isAuthorized = isOwner || isAdmin;
-
-  // Protect unauthorized access to dashboards
-  useEffect(() => {
-    if (!loading && pageProfile && !isAuthorized) {
-      // If profile loaded but current user is not owner/admin, redirect to their own dashboard or login
-      if (profile) {
-        navigate(`/admin/${profile.username}`, { replace: true });
-      } else {
-        navigate('/login', { replace: true });
-      }
-    }
-  }, [loading, pageProfile, isAuthorized, profile, navigate]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -1211,7 +1192,7 @@ export default function AdminDashboard() {
     return matchesSearch && matchesCat;
   });
 
-  if (loading || authLoading) return <div className="flex-1 flex items-center justify-center animate-pulse text-purple-400 font-medium tracking-wider">Loading Space...</div>;
+  if (loading) return <div className="flex-1 flex items-center justify-center animate-pulse text-purple-400 font-medium tracking-wider">Loading Space...</div>;
   if (!pageProfile) return <div className="flex-1 flex flex-col items-center justify-center space-y-4 text-center"><h1 className="text-4xl font-black text-purple-400">404 SPACE NOT FOUND</h1><p className="text-zinc-400 font-light">The requested user '{username}' does not exist.</p></div>;
 
   const getMediaIcon = (item: any) => {

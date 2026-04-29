@@ -14,7 +14,7 @@ export default function SmartRedirect() {
   useEffect(() => {
     const resolveSlug = async () => {
       try {
-        // 1. Find profile first (needed for ID)
+        // 1. Find profile
         const { data: profile, error: pError } = await supabase
           .from('profiles')
           .select('id, username')
@@ -27,24 +27,13 @@ export default function SmartRedirect() {
           return;
         }
 
-        // 2. Check for Tool and Short Link in parallel
-        const [toolRes, linkRes] = await Promise.all([
-          supabase
-            .from('tools')
-            .select('id, slug, name, is_media')
-            .or(`slug.eq."${slug}",name.ilike."${slug}"`)
-            .eq('user_id', profile.id)
-            .maybeSingle(),
-          supabase
-            .from('short_links')
-            .select('id, slug')
-            .eq('profile_id', profile.id)
-            .eq('slug', slug)
-            .maybeSingle()
-        ]);
-
-        const tool = toolRes.data;
-        const link = linkRes.data;
+        // 2. Check if it's a Tool slug
+        const { data: tool } = await supabase
+          .from('tools')
+          .select('id, slug, name, is_media')
+          .or(`slug.eq."${slug}",name.ilike."${slug}"`)
+          .eq('user_id', profile.id)
+          .maybeSingle();
 
         if (tool) {
           if (tool.is_media) {
@@ -55,6 +44,14 @@ export default function SmartRedirect() {
           }
           return;
         }
+
+        // 3. Check if it's a Short Link slug (Legacy or fallback)
+        const { data: link } = await supabase
+          .from('short_links')
+          .select('id, slug')
+          .eq('profile_id', profile.id)
+          .eq('slug', slug)
+          .maybeSingle();
 
         if (link) {
           navigate(`/${username}/link/${link.slug}`, { replace: true });

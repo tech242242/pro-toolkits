@@ -252,13 +252,21 @@ export default function SimDatabaseView() {
                     {dbConfig.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                    <h1 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(to right, ${themeHex}, #3b82f6)` }}>
+                    <h1 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent leading-tight" style={{ backgroundImage: `linear-gradient(to right, ${themeHex}, #3b82f6)` }}>
                       {dbConfig.name}
                     </h1>
+                    {dbConfig.admin_name && (
+                      <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider -mt-1 opacity-80">Admin: {dbConfig.admin_name}</p>
+                    )}
                     <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono tracking-widest uppercase">ID Resolution Node</p>
                 </div>
             </div>
             <div className="flex items-center gap-2 md:gap-4 relative z-10">
+                {dbConfig.main_website_link && (
+                  <a href={dbConfig.main_website_link} target="_blank" rel="noopener noreferrer" className="p-2.5 rounded-full bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition-all border border-blue-500/20 shadow-lg shadow-blue-500/10">
+                      <ExternalLink className="w-5 h-5" />
+                  </a>
+                )}
                 {dbConfig.channel_link && (
                   <a href={dbConfig.channel_link} target="_blank" rel="noopener noreferrer" className="hidden md:flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-full font-semibold transition-all shadow-lg shadow-green-500/30">
                       <i className="bi bi-whatsapp"></i> Join Channel

@@ -41,6 +41,8 @@ import {
   FileText,
   FileArchive,
   FileCode,
+  Loader2,
+  Save,
 } from "lucide-react";
 import imageCompression from "browser-image-compression";
 import Cropper from "react-easy-crop";
@@ -59,7 +61,7 @@ import {
   uploadVideoClientSide,
   uploadImageClientSide,
 } from "./utils";
-import { Profile, Tool, ShortLink, Portfolio, SimDatabase } from "./types";
+import { Profile, Tool, ShortLink, Portfolio, SimDatabase, SmsBomber } from "./types";
 import { CustomToolsTab } from "./components/tabs/CustomToolsTab";
 
 export default function AdminDashboard() {
@@ -79,6 +81,8 @@ export default function AdminDashboard() {
   } | null>(null);
   const dpInputRef = useRef<HTMLInputElement>(null);
   const bgInputRef = useRef<HTMLInputElement>(null);
+  const simDbBgInputRef = useRef<HTMLInputElement>(null);
+  const smsBomberBgInputRef = useRef<HTMLInputElement>(null);
 
   const convertToBase64 = (file: File | Blob): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -223,6 +227,7 @@ export default function AdminDashboard() {
   const [simDbForm, setSimDbForm] = useState({
     admin_username: "",
     name: "",
+    admin_name: "", // Added
     channel_link: "",
     whatsapp_number: "",
     theme_color: "#00E5FF",
@@ -230,6 +235,29 @@ export default function AdminDashboard() {
     bg_image_url: "",
     main_website_link: "",
   });
+
+  // Sms Bomber State
+  const [smsBombers, setSmsBombers] = useState<SmsBomber[]>([]);
+  const [isSmsBomberModalOpen, setIsSmsBomberModalOpen] = useState(false);
+  const [editingSmsBomber, setEditingSmsBomber] = useState<SmsBomber | null>(null);
+  const [smsBomberForm, setSmsBomberForm] = useState({
+    admin_username: "",
+    name: "",
+    admin_name: "",
+    channel_link: "",
+    whatsapp_number: "",
+    theme_color: "#FF3A3A",
+    font_family: "sans",
+    bg_image_url: "",
+    main_website_link: "",
+  });
+  const [smsBomberMessage, setSmsBomberMessage] = useState<{
+    text: string;
+    type: "error" | "success";
+  } | null>(null);
+  const [smsBomberLoading, setSmsBomberLoading] = useState(false);
+  const [simDbBgUploading, setSimDbBgUploading] = useState(false);
+  const [smsBomberBgUploading, setSmsBomberBgUploading] = useState(false);
   const [simDbMessage, setSimDbMessage] = useState<{
     text: string;
     type: "error" | "success";
@@ -333,6 +361,7 @@ export default function AdminDashboard() {
           fetchShortLinks(data.id);
           fetchPortfolios(data.id);
           fetchSimDatabases(data.id);
+          fetchSmsBombers(data.id);
         } else {
           setPageProfile(null);
           console.error("Profile fetch error:", error);
@@ -384,6 +413,49 @@ export default function AdminDashboard() {
       .eq("profile_id", profileId)
       .order("created_at", { ascending: false });
     if (data && !error) setSimDatabases(data);
+  };
+
+  const fetchSmsBombers = async (profileId: string) => {
+    const { data, error } = await supabase
+      .from("sms_bombers")
+      .select("*")
+      .eq("profile_id", profileId)
+      .order("created_at", { ascending: false });
+    if (data && !error) setSmsBombers(data || []);
+  };
+
+  const handleSimDbBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    setSimDbBgUploading(true);
+    try {
+      const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1920, useWebWorker: true };
+      const compressedFile = await imageCompression(file, options);
+      const data = await uploadImageClientSide(compressedFile, "simdb-bg");
+      setSimDbForm((prev) => ({ ...prev, bg_image_url: data.url }));
+    } catch (err: any) {
+      setSimDbMessage({ text: "Upload failed: " + err.message, type: "error" });
+    } finally {
+      setSimDbBgUploading(false);
+      if (simDbBgInputRef.current) simDbBgInputRef.current.value = "";
+    }
+  };
+
+  const handleSmsBomberBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    setSmsBomberBgUploading(true);
+    try {
+      const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1920, useWebWorker: true };
+      const compressedFile = await imageCompression(file, options);
+      const data = await uploadImageClientSide(compressedFile, "sms-bg");
+      setSmsBomberForm((prev) => ({ ...prev, bg_image_url: data.url }));
+    } catch (err: any) {
+      setSmsBomberMessage({ text: "Upload failed: " + err.message, type: "error" });
+    } finally {
+      setSmsBomberBgUploading(false);
+      if (smsBomberBgInputRef.current) smsBomberBgInputRef.current.value = "";
+    }
   };
 
   const openPortfolioModal = (port?: Portfolio) => {
@@ -504,24 +576,26 @@ export default function AdminDashboard() {
       setSimDbForm({
         admin_username: db.admin_username,
         name: db.name,
+        admin_name: db.admin_name || pageProfile?.name || "",
         channel_link: db.channel_link || "",
         whatsapp_number: db.whatsapp_number || "",
         theme_color: db.theme_color || "#00E5FF",
         font_family: db.font_family || "sans",
         bg_image_url: db.bg_image_url || "",
-        main_website_link: db.main_website_link || "", // Added
+        main_website_link: db.main_website_link || "",
       });
     } else {
       setEditingSimDb(null);
       setSimDbForm({
         admin_username: pageProfile?.username || "",
         name: "",
+        admin_name: pageProfile?.name || "",
         channel_link: "",
         whatsapp_number: "",
         theme_color: "#00E5FF",
         font_family: "sans",
         bg_image_url: "",
-        main_website_link: "", // Added
+        main_website_link: "",
       });
     }
     setIsSimDbModalOpen(true);
@@ -546,6 +620,7 @@ export default function AdminDashboard() {
         profile_id: pageProfile.id,
         admin_username: cleanUsername,
         name: formData.name,
+        admin_name: formData.admin_name, // Added
         channel_link: formData.channel_link,
         whatsapp_number: formData.whatsapp_number,
         theme_color: formData.theme_color,
@@ -570,10 +645,14 @@ export default function AdminDashboard() {
       fetchSimDatabases(pageProfile.id);
       setTimeout(() => setIsSimDbModalOpen(false), 800);
     } catch (err: any) {
+      let errorMsg = err.message || "An error occurred";
+      if (err.message?.includes("column") && err.message?.includes("admin_name")) {
+        errorMsg = "Database error: 'admin_name' column missing. Please run the SQL fix in Supabase Editor.";
+      }
       setSimDbMessage({
         text: err.message.includes("unique")
           ? "Username slug already exists"
-          : err.message,
+          : errorMsg,
         type: "error",
       });
     } finally {
@@ -586,6 +665,104 @@ export default function AdminDashboard() {
     if (!window.confirm("Delete this Sim Database?")) return;
     const { error } = await supabase.from("sim_databases").delete().eq("id", id);
     if (!error) fetchSimDatabases(pageProfile.id);
+  };
+
+  const openSmsBomberModal = (bomber?: SmsBomber) => {
+    setSmsBomberMessage(null);
+    if (bomber) {
+      setEditingSmsBomber(bomber);
+      setSmsBomberForm({
+        admin_username: bomber.admin_username,
+        name: bomber.name,
+        admin_name: bomber.admin_name || pageProfile?.name || "",
+        channel_link: bomber.channel_link || "",
+        whatsapp_number: bomber.whatsapp_number || "",
+        theme_color: bomber.theme_color || "#FF3A3A",
+        font_family: bomber.font_family || "sans",
+        bg_image_url: bomber.bg_image_url || "",
+        main_website_link: bomber.main_website_link || "",
+      });
+    } else {
+      setEditingSmsBomber(null);
+      setSmsBomberForm({
+        admin_username: pageProfile?.username || "",
+        name: "",
+        admin_name: pageProfile?.name || "",
+        channel_link: "",
+        whatsapp_number: "",
+        theme_color: "#FF3A3A",
+        font_family: "sans",
+        bg_image_url: "",
+        main_website_link: "",
+      });
+    }
+    setIsSmsBomberModalOpen(true);
+  };
+
+  const saveSmsBomber = async (formData: any) => {
+    setSmsBomberMessage(null);
+    setSmsBomberLoading(true);
+
+    if (!formData.admin_username || !formData.name) {
+      setSmsBomberMessage({ text: "Admin Username and Name are required.", type: "error" });
+      setSmsBomberLoading(false);
+      return;
+    }
+
+    const cleanUsername = formData.admin_username
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, "");
+
+    try {
+      const payload = {
+        profile_id: pageProfile.id,
+        admin_username: cleanUsername,
+        name: formData.name,
+        admin_name: formData.admin_name,
+        channel_link: formData.channel_link,
+        whatsapp_number: formData.whatsapp_number,
+        theme_color: formData.theme_color,
+        font_family: formData.font_family,
+        bg_image_url: formData.bg_image_url,
+        main_website_link: formData.main_website_link,
+      };
+
+      if (editingSmsBomber) {
+        const { error } = await supabase
+          .from("sms_bombers")
+          .update(payload)
+          .eq("id", editingSmsBomber.id);
+        if (error) throw error;
+        setSmsBomberMessage({ text: "SMS Bomber updated!", type: "success" });
+      } else {
+        const { error } = await supabase.from("sms_bombers").insert(payload);
+        if (error) throw error;
+        setSmsBomberMessage({ text: "SMS Bomber created!", type: "success" });
+      }
+
+      fetchSmsBombers(pageProfile.id);
+      setTimeout(() => setIsSmsBomberModalOpen(false), 800);
+    } catch (err: any) {
+      let errorMsg = err.message || "An error occurred";
+      if (err.message?.includes("column") && err.message?.includes("admin_name")) {
+        errorMsg = "Database error: 'admin_name' column missing. Please run the SQL fix in Supabase Editor.";
+      }
+      setSmsBomberMessage({
+        text: err.message.includes("unique")
+          ? "Username slug already exists"
+          : errorMsg,
+        type: "error",
+      });
+    } finally {
+      setSmsBomberLoading(false);
+    }
+  };
+
+  const deleteSmsBomber = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!window.confirm("Delete this SMS Bomber?")) return;
+    const { error } = await supabase.from("sms_bombers").delete().eq("id", id);
+    if (!error) fetchSmsBombers(pageProfile.id);
   };
 
   const openShortLinkModal = (link?: ShortLink) => {
@@ -2613,8 +2790,11 @@ export default function AdminDashboard() {
           {activeMainTab === "custom_tools" && (
             <CustomToolsTab
               simDatabases={simDatabases}
+              smsBombers={smsBombers}
               openSimDbModal={openSimDbModal}
               deleteSimDb={deleteSimDb}
+              openSmsBomberModal={openSmsBomberModal}
+              deleteSmsBomber={deleteSmsBomber}
               handleCopyLink={handleCopyLink}
             />
           )}
@@ -2679,6 +2859,34 @@ export default function AdminDashboard() {
                         placeholder="e.g. Saqib Zone"
                         required
                         className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-light text-zinc-300 ml-1">
+                        Display Admin Name
+                      </label>
+                      <input
+                        type="text"
+                        value={simDbForm.admin_name}
+                        onChange={(e) =>
+                          setSimDbForm({ ...simDbForm, admin_name: e.target.value })
+                        }
+                        placeholder="e.g. Saqib Redin"
+                        className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                       <label className="text-sm font-light text-zinc-300 ml-1">
+                        Main Website Link
+                      </label>
+                      <input
+                        type="url"
+                        value={simDbForm.main_website_link}
+                        onChange={(e) =>
+                          setSimDbForm({ ...simDbForm, main_website_link: e.target.value })
+                        }
+                        placeholder="https://..."
+                        className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-mono text-sm"
                       />
                     </div>
                   </div>
@@ -2748,6 +2956,30 @@ export default function AdminDashboard() {
                         </label>
                         <div className="w-full max-w-full overflow-x-auto no-scrollbar pb-2">
                           <div className="flex gap-2 w-max">
+                            <input
+                              type="file"
+                              ref={simDbBgInputRef}
+                              onChange={handleSimDbBgUpload}
+                              accept="image/*"
+                              className="hidden"
+                            />
+                            <button
+                              type="button"
+                              disabled={simDbBgUploading}
+                              onClick={() => simDbBgInputRef.current?.click()}
+                              className={`w-12 h-16 shrink-0 rounded-lg flex flex-col items-center justify-center border-2 border-dashed transition-all border-white/10 hover:border-cyan-500/50 hover:bg-cyan-500/10 ${simDbBgUploading ? "opacity-50" : ""}`}
+                            >
+                              {simDbBgUploading ? (
+                                <Activity className="w-5 h-5 animate-spin text-cyan-500" />
+                              ) : (
+                                <>
+                                  <UploadCloud className="w-5 h-5 text-zinc-500" />
+                                  <span className="text-[10px] font-bold text-zinc-500 mt-1">
+                                    Up
+                                  </span>
+                                </>
+                              )}
+                            </button>
                             <button
                               type="button"
                               onClick={() => setSimDbForm({ ...simDbForm, bg_image_url: "" })}
@@ -2789,6 +3021,244 @@ export default function AdminDashboard() {
                     ) : (
                       "Save Database Tool"
                     )}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Sms Bomber Form Modal */}
+        {isSmsBomberModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-[#050014]/80 backdrop-blur-xl"
+              onClick={() => setIsSmsBomberModalOpen(false)}
+            ></div>
+            <div className="relative bg-[#0F0A1F]/95 border border-red-500/30 w-full max-w-xl max-h-[90vh] flex flex-col shadow-[0_0_50px_rgba(239,68,68,0.15)] rounded-3xl animate-in zoom-in-95 duration-200 overflow-hidden">
+              <button
+                onClick={() => setIsSmsBomberModalOpen(false)}
+                className="absolute top-5 right-5 z-10 text-zinc-400 hover:text-white p-2 bg-white/5 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="p-6 md:p-8 flex-1 overflow-y-auto custom-scrollbar">
+                <h2 className="text-2xl font-semibold tracking-tight text-white mb-6 flex items-center gap-2">
+                  <FileCode className="w-6 h-6 text-red-500" />
+                  {editingSmsBomber ? "Edit SMS Bomber" : "New SMS Bomber"}
+                </h2>
+
+                {smsBomberMessage && (
+                  <div
+                    className={`mb-6 p-4 rounded-xl text-sm border ${smsBomberMessage.type === "error" ? "bg-red-500/10 border-red-500/30 text-red-200" : "bg-green-500/10 border-green-500/30 text-green-200"}`}
+                  >
+                    {smsBomberMessage.text}
+                  </div>
+                )}
+
+                <form onSubmit={(e) => { e.preventDefault(); saveSmsBomber(smsBomberForm); }} className="space-y-6 pb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-light text-zinc-300 ml-1">
+                        Admin Username (URL path: /bomber/name)
+                      </label>
+                      <input
+                        type="text"
+                        value={smsBomberForm.admin_username}
+                        onChange={(e) =>
+                          setSmsBomberForm({ ...smsBomberForm, admin_username: e.target.value })
+                        }
+                        placeholder="e.g. saqib_bomber"
+                        required
+                        className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all font-mono"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-light text-zinc-300 ml-1">
+                        Tool Name
+                      </label>
+                      <input
+                        type="text"
+                        value={smsBomberForm.name}
+                        onChange={(e) =>
+                          setSmsBomberForm({ ...smsBomberForm, name: e.target.value })
+                        }
+                        placeholder="e.g. Redin Bomber"
+                        required
+                        className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-light text-zinc-300 ml-1">
+                        Display Admin Name
+                      </label>
+                      <input
+                        type="text"
+                        value={smsBomberForm.admin_name}
+                        onChange={(e) =>
+                          setSmsBomberForm({ ...smsBomberForm, admin_name: e.target.value })
+                        }
+                        placeholder="e.g. Saqib Redin"
+                        className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                       <label className="text-sm font-light text-zinc-300 ml-1">
+                        Main Website Link
+                      </label>
+                      <input
+                        type="url"
+                        value={smsBomberForm.main_website_link}
+                        onChange={(e) =>
+                          setSmsBomberForm({ ...smsBomberForm, main_website_link: e.target.value })
+                        }
+                        placeholder="https://..."
+                        className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all font-mono text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-light text-zinc-300 ml-1">
+                        Channel Link (Optional)
+                      </label>
+                      <input
+                        type="url"
+                        value={smsBomberForm.channel_link}
+                        onChange={(e) =>
+                          setSmsBomberForm({ ...smsBomberForm, channel_link: e.target.value })
+                        }
+                        placeholder="https://whatsapp.com/channel/..."
+                        className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all font-mono text-sm"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-light text-zinc-300 ml-1">
+                        WhatsApp Number (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={smsBomberForm.whatsapp_number}
+                        onChange={(e) =>
+                          setSmsBomberForm({
+                            ...smsBomberForm,
+                            whatsapp_number: e.target.value,
+                          })
+                        }
+                        placeholder="e.g. +923001234567"
+                        className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="border-t border-white/5 pt-6 space-y-6">
+                    <h3 className="text-lg font-bold text-white mb-2">
+                      Theme Customization
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-light text-zinc-300 ml-1">
+                          Theme Gradient / Color
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={smsBomberForm.theme_color}
+                            onChange={(e) =>
+                              setSmsBomberForm({
+                                ...smsBomberForm,
+                                theme_color: e.target.value,
+                              })
+                            }
+                            className="w-12 h-12 rounded-lg bg-black/40 border border-white/10 cursor-pointer p-1 transition-all hover:scale-110"
+                          />
+                          <input
+                            type="text"
+                            value={smsBomberForm.theme_color}
+                            onChange={(e) =>
+                              setSmsBomberForm({
+                                ...smsBomberForm,
+                                theme_color: e.target.value,
+                              })
+                            }
+                            className="flex-1 bg-[#050014] border border-white/10 rounded-xl px-4 py-3 text-white font-mono text-sm"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-light text-zinc-300 ml-1">
+                          Wallpapers Option
+                        </label>
+                        <div className="w-full max-w-full overflow-x-auto no-scrollbar pb-2">
+                          <div className="flex gap-2 w-max">
+                            <input
+                              type="file"
+                              ref={smsBomberBgInputRef}
+                              onChange={handleSmsBomberBgUpload}
+                              accept="image/*"
+                              className="hidden"
+                            />
+                            <button
+                              type="button"
+                              disabled={smsBomberBgUploading}
+                              onClick={() => smsBomberBgInputRef.current?.click()}
+                              className={`w-12 h-16 shrink-0 rounded-lg flex flex-col items-center justify-center border-2 border-dashed transition-all border-white/10 hover:border-red-500/50 hover:bg-red-500/10 ${smsBomberBgUploading ? "opacity-50" : ""}`}
+                            >
+                              {smsBomberBgUploading ? (
+                                <Activity className="w-5 h-5 animate-spin text-red-500" />
+                              ) : (
+                                <>
+                                  <UploadCloud className="w-5 h-5 text-zinc-500" />
+                                  <span className="text-[10px] font-bold text-zinc-500 mt-1">
+                                    Up
+                                  </span>
+                                </>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setSmsBomberForm({ ...smsBomberForm, bg_image_url: "" })}
+                              className={`w-12 h-16 shrink-0 rounded-lg flex items-center justify-center border-2 transition-all ${
+                                !smsBomberForm.bg_image_url
+                                  ? "border-red-500 bg-white/10"
+                                  : "border-white/10 hover:border-white/30"
+                              }`}
+                            >
+                              <span className="text-xs font-bold text-zinc-500">None</span>
+                            </button>
+                            {WALLPAPER_TEMPLATES.map((url, i) => (
+                              <button
+                                type="button"
+                                key={i}
+                                onClick={() => setSmsBomberForm({ ...smsBomberForm, bg_image_url: url })}
+                                className={`w-12 h-16 shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
+                                  smsBomberForm.bg_image_url === url
+                                    ? "border-red-500 scale-105"
+                                    : "border-white/10 hover:border-white/30"
+                                }`}
+                              >
+                                <img src={url} alt="bg" className="w-full h-full object-cover" />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={smsBomberLoading}
+                    className="w-full bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-bold py-4 rounded-xl shadow-lg shadow-red-600/20 transition-all mt-6 active:scale-[0.98] flex items-center justify-center gap-2"
+                  >
+                    {smsBomberLoading ? (
+                      <Activity className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Save className="w-5 h-5" />
+                    )}
+                    {editingSmsBomber ? "Update SMS Bomber" : "Create SMS Bomber"}
                   </button>
                 </form>
               </div>

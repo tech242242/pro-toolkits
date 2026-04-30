@@ -90,12 +90,29 @@ export interface SimDatabase {
   profile_id: string;
   admin_username: string; // The URL slug will be mydomain.com/db/admin_username
   name: string;
+  admin_name?: string; // Added
   channel_link?: string;
   whatsapp_number?: string;
   theme_color: string;
   font_family: string;
   bg_image_url?: string;
   main_website_link?: string;
+  views_count: number;
+  created_at: string;
+}
+
+export interface SmsBomber {
+  id: string;
+  profile_id: string;
+  admin_username: string; // URL slug: /bomber/admin_username
+  name: string;
+  admin_name?: string;
+  channel_link?: string;
+  whatsapp_number?: string;
+  theme_color: string;
+  font_family: string;
+  main_website_link?: string;
+  bg_image_url?: string;
   views_count: number;
   created_at: string;
 }

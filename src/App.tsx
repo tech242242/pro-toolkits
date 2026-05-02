@@ -16,6 +16,9 @@ const SmartRedirect = lazy(() => import('./pages/SmartRedirect'));
 const PortfolioView = lazy(() => import('./pages/PortfolioView'));
 const SimDatabaseView = lazy(() => import('./pages/SimDatabaseView'));
 const SmsBomberView = lazy(() => import('./pages/SmsBomberView'));
+const ChatbotView = lazy(() => import('./pages/ChatbotView'));
+const AiImageGeneratorView = lazy(() => import('./pages/AiImageGeneratorView'));
+const TikTokDownloaderView = lazy(() => import('./pages/TikTokDownloaderView'));
 import ProtectedRoute from './components/ProtectedRoute';
 
 function HomeOrRedirect() {
@@ -69,6 +72,9 @@ export default function App() {
               <Route path="/admin/:username" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
               <Route path="/db/:admin_username" element={<SimDatabaseView />} />
               <Route path="/bomber/:admin_username" element={<SmsBomberView />} />
+              <Route path="/cb/:admin_username" element={<ChatbotView />} />
+              <Route path="/image/:admin_username" element={<AiImageGeneratorView />} />
+              <Route path="/tiktok/:admin_username" element={<TikTokDownloaderView />} />
               <Route path="/:username" element={<PublicView />} />
               <Route path="/:username/link/:slug" element={<ShortLinkRedirect />} />
               <Route path="/:username/media/:toolId/:filename" element={<MediaDownload />} />

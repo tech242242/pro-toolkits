@@ -67,9 +67,11 @@ export default function SimDatabaseView() {
         .from('sim_databases')
         .select('*')
         .eq('admin_username', username)
-        .single();
+        .limit(1)
+        .maybeSingle();
         
       if (error || !data) {
+        console.error("Supabase Error:", error);
         setError('Database tool not found or inactive.');
       } else {
         setDbConfig(data);

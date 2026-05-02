@@ -73,6 +73,38 @@ CREATE TABLE IF NOT EXISTS public.page_visitors (
 -- High-speed index to verify follower status
 CREATE INDEX IF NOT EXISTS idx_page_visitors_profile_hash ON public.page_visitors(profile_id, visitor_hash);
 
+-- Chatbots Table
+CREATE TABLE IF NOT EXISTS public.chatbots (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  profile_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+  admin_username TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  bot_name TEXT,
+  bot_avatar TEXT,
+  admin_name TEXT,
+  theme_color TEXT,
+  bg_image_url TEXT,
+  views_count INT DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(profile_id, admin_username)
+);
+CREATE INDEX IF NOT EXISTS idx_chatbots_profile_id ON public.chatbots(profile_id);
+CREATE INDEX IF NOT EXISTS idx_chatbots_admin_username ON public.chatbots(admin_username);
+
+-- Enable RLS for chatbots
+ALTER TABLE public.chatbots ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Enable all reads and writes for chatbots" ON public.chatbots FOR ALL USING (true) WITH CHECK (true);
+
+-- RPC for incrementing views
+CREATE OR REPLACE FUNCTION public.increment_chatbot_views(bot_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.chatbots
+  SET views_count = COALESCE(views_count, 0) + 1
+  WHERE id = bot_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 
 -- 5. RPC Methods (Improves Website Performance by saving transactions)
 CREATE OR REPLACE FUNCTION public.increment_profile_views(profile_row_id UUID)

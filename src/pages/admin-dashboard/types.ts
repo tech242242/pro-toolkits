@@ -116,3 +116,42 @@ export interface SmsBomber {
   views_count: number;
   created_at: string;
 }
+
+export interface Chatbot {
+  id: string;
+  profile_id: string;
+  admin_username: string; // URL slug: /cb/admin_username or /chatbot/admin_username
+  name: string;
+  bot_name?: string; // name in the chatbot header
+  bot_avatar?: string;
+  admin_name?: string;
+  theme_color: string; // primary neon color
+  bg_image_url?: string;
+  views_count: number;
+  created_at: string;
+}
+
+export interface AiImageGenerator {
+  id: string;
+  profile_id: string;
+  admin_username: string;
+  name: string;
+  admin_name?: string;
+  description?: string;
+  theme_color: string;
+  bg_image_url?: string;
+  views_count: number;
+  created_at: string;
+}
+
+export interface TikTokDownloader {
+  id: string;
+  profile_id: string;
+  admin_username: string;
+  name: string;
+  admin_name?: string;
+  theme_color: string;
+  bg_image_url?: string;
+  views_count: number;
+  created_at: string;
+}

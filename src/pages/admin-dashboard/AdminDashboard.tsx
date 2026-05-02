@@ -43,6 +43,10 @@ import {
   FileCode,
   Loader2,
   Save,
+  Bot,
+  Brain,
+  AlertCircle,
+  Sparkles,
 } from "lucide-react";
 import imageCompression from "browser-image-compression";
 import Cropper from "react-easy-crop";
@@ -61,7 +65,7 @@ import {
   uploadVideoClientSide,
   uploadImageClientSide,
 } from "./utils";
-import { Profile, Tool, ShortLink, Portfolio, SimDatabase, SmsBomber } from "./types";
+import { Profile, Tool, ShortLink, Portfolio, SimDatabase, SmsBomber, Chatbot, AiImageGenerator, TikTokDownloader } from "./types";
 import { CustomToolsTab } from "./components/tabs/CustomToolsTab";
 
 export default function AdminDashboard() {
@@ -236,6 +240,26 @@ export default function AdminDashboard() {
     main_website_link: "",
   });
 
+  // Chatbot State
+  const [chatbots, setChatbots] = useState<Chatbot[]>([]);
+  const [isChatbotModalOpen, setIsChatbotModalOpen] = useState(false);
+  const [editingChatbot, setEditingChatbot] = useState<Chatbot | null>(null);
+  const [chatbotForm, setChatbotForm] = useState({
+    admin_username: "",
+    name: "",
+    bot_name: "",
+    bot_avatar: "",
+    admin_name: "",
+    theme_color: "#ff2d75",
+    bg_image_url: "",
+  });
+  const [chatbotMessage, setChatbotMessage] = useState<{ text: string; type: "error" | "success" } | null>(null);
+  const [chatbotLoading, setChatbotLoading] = useState(false);
+  const [chatbotBgUploading, setChatbotBgUploading] = useState(false);
+  const [chatbotAvatarUploading, setChatbotAvatarUploading] = useState(false);
+  const chatbotBgInputRef = useRef<HTMLInputElement>(null);
+  const chatbotAvatarInputRef = useRef<HTMLInputElement>(null);
+
   // Sms Bomber State
   const [smsBombers, setSmsBombers] = useState<SmsBomber[]>([]);
   const [isSmsBomberModalOpen, setIsSmsBomberModalOpen] = useState(false);
@@ -263,6 +287,35 @@ export default function AdminDashboard() {
     type: "error" | "success";
   } | null>(null);
   const [simDbLoading, setSimDbLoading] = useState(false);
+
+  // AI Image Generator State
+  const [imageGenerators, setImageGenerators] = useState<AiImageGenerator[]>([]);
+  const [isAiImageModalOpen, setIsAiImageModalOpen] = useState(false);
+  const [editingAiImage, setEditingAiImage] = useState<AiImageGenerator | null>(null);
+  const [aiImageForm, setAiImageForm] = useState({
+    admin_username: "",
+    name: "",
+    admin_name: "",
+    description: "",
+    theme_color: "#7c3aed",
+    bg_image_url: "",
+  });
+  const [aiImageMessage, setAiImageMessage] = useState<{ text: string; type: "error" | "success" } | null>(null);
+  const [aiImageLoading, setAiImageLoading] = useState(false);
+
+  // TikTok Downloader State
+  const [tiktokDownloaders, setTiktokDownloaders] = useState<TikTokDownloader[]>([]);
+  const [isTiktokModalOpen, setIsTiktokModalOpen] = useState(false);
+  const [editingTiktok, setEditingTiktok] = useState<TikTokDownloader | null>(null);
+  const [tiktokForm, setTiktokForm] = useState({
+    admin_username: "",
+    name: "",
+    admin_name: "",
+    theme_color: "#4facfe",
+    bg_image_url: "",
+  });
+  const [tiktokMessage, setTiktokMessage] = useState<{ text: string; type: "error" | "success" } | null>(null);
+  const [tiktokLoading, setTiktokLoading] = useState(false);
 
   // New: Data Upload Modal State
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -362,6 +415,9 @@ export default function AdminDashboard() {
           fetchPortfolios(data.id);
           fetchSimDatabases(data.id);
           fetchSmsBombers(data.id);
+          fetchChatbots(data.id);
+          fetchImageGenerators(data.id);
+          fetchTiktokDownloaders(data.id);
         } else {
           setPageProfile(null);
           console.error("Profile fetch error:", error);
@@ -415,6 +471,15 @@ export default function AdminDashboard() {
     if (data && !error) setSimDatabases(data);
   };
 
+  const fetchChatbots = async (profileId: string) => {
+    const { data, error } = await supabase
+      .from("chatbots")
+      .select("*")
+      .eq("profile_id", profileId)
+      .order("created_at", { ascending: false });
+    if (data && !error) setChatbots(data || []);
+  };
+
   const fetchSmsBombers = async (profileId: string) => {
     const { data, error } = await supabase
       .from("sms_bombers")
@@ -422,6 +487,24 @@ export default function AdminDashboard() {
       .eq("profile_id", profileId)
       .order("created_at", { ascending: false });
     if (data && !error) setSmsBombers(data || []);
+  };
+
+  const fetchImageGenerators = async (profileId: string) => {
+    const { data, error } = await supabase
+      .from("ai_image_generators")
+      .select("*")
+      .eq("profile_id", profileId)
+      .order("created_at", { ascending: false });
+    if (!error && data) setImageGenerators(data);
+  };
+
+  const fetchTiktokDownloaders = async (profileId: string) => {
+    const { data, error } = await supabase
+      .from("tiktok_downloaders")
+      .select("*")
+      .eq("profile_id", profileId)
+      .order("created_at", { ascending: false });
+    if (!error && data) setTiktokDownloaders(data);
   };
 
   const handleSimDbBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -611,14 +694,16 @@ export default function AdminDashboard() {
       return;
     }
 
-    const cleanUsername = formData.admin_username
+    const profileUsername = pageProfile?.username || "user";
+    const baseUsername = formData.admin_username || profileUsername;
+    const cleanUsername = baseUsername
       .toLowerCase()
       .replace(/[^a-z0-9_-]/g, "");
 
     try {
       const payload = {
         profile_id: pageProfile.id,
-        admin_username: cleanUsername,
+        admin_username: cleanUsername || `db-${Math.random().toString(36).substring(2, 7)}`,
         name: formData.name,
         admin_name: formData.admin_name, // Added
         channel_link: formData.channel_link,
@@ -709,14 +794,16 @@ export default function AdminDashboard() {
       return;
     }
 
-    const cleanUsername = formData.admin_username
+    const profileUsername = pageProfile?.username || "user";
+    const baseUsername = formData.admin_username || profileUsername;
+    const cleanUsername = baseUsername
       .toLowerCase()
       .replace(/[^a-z0-9_-]/g, "");
 
     try {
       const payload = {
         profile_id: pageProfile.id,
-        admin_username: cleanUsername,
+        admin_username: cleanUsername || `bomber-${Math.random().toString(36).substring(2, 7)}`,
         name: formData.name,
         admin_name: formData.admin_name,
         channel_link: formData.channel_link,
@@ -763,6 +850,298 @@ export default function AdminDashboard() {
     if (!window.confirm("Delete this SMS Bomber?")) return;
     const { error } = await supabase.from("sms_bombers").delete().eq("id", id);
     if (!error) fetchSmsBombers(pageProfile.id);
+  };
+
+  const handleChatbotBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    setChatbotBgUploading(true);
+    try {
+      const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1920, useWebWorker: true };
+      const compressedFile = await imageCompression(file, options);
+      const data = await uploadImageClientSide(compressedFile, "chatbot-bg");
+      setChatbotForm((prev) => ({ ...prev, bg_image_url: data.url }));
+    } catch (err: any) {
+      setChatbotMessage({ text: "Upload failed: " + err.message, type: "error" });
+    } finally {
+      setChatbotBgUploading(false);
+      if (chatbotBgInputRef.current) chatbotBgInputRef.current.value = "";
+    }
+  };
+
+  const handleChatbotAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    setChatbotAvatarUploading(true);
+    try {
+      const options = { maxSizeMB: 0.3, maxWidthOrHeight: 512, useWebWorker: true };
+      const compressedFile = await imageCompression(file, options);
+      const data = await uploadImageClientSide(compressedFile, "chatbot-avatar");
+      setChatbotForm((prev) => ({ ...prev, bot_avatar: data.url }));
+    } catch (err: any) {
+      setChatbotMessage({ text: "Upload failed: " + err.message, type: "error" });
+    } finally {
+      setChatbotAvatarUploading(false);
+      if (chatbotAvatarInputRef.current) chatbotAvatarInputRef.current.value = "";
+    }
+  };
+
+  const openChatbotModal = (bot?: Chatbot) => {
+    setChatbotMessage(null);
+    if (bot) {
+      setEditingChatbot(bot);
+      setChatbotForm({
+        admin_username: bot.admin_username,
+        name: bot.name,
+        bot_name: bot.bot_name || "",
+        bot_avatar: bot.bot_avatar || "",
+        admin_name: bot.admin_name || pageProfile?.name || "",
+        theme_color: bot.theme_color || "#ff2d75",
+        bg_image_url: bot.bg_image_url || "",
+      });
+    } else {
+      setEditingChatbot(null);
+      setChatbotForm({
+        admin_username: pageProfile?.username || "",
+        name: "",
+        bot_name: "",
+        bot_avatar: "",
+        admin_name: pageProfile?.name || "",
+        theme_color: "#ff2d75",
+        bg_image_url: "",
+      });
+    }
+    setIsChatbotModalOpen(true);
+  };
+
+  const saveChatbot = async (formData: any) => {
+    if (!pageProfile) return;
+    setChatbotMessage(null);
+    setChatbotLoading(true);
+
+    if (!formData.admin_username || !formData.name) {
+      setChatbotMessage({ text: "Admin Username and Name are required.", type: "error" });
+      setChatbotLoading(false);
+      return;
+    }
+
+    try {
+      const profileUsername = pageProfile?.username || "user";
+      const baseUsername = formData.admin_username || profileUsername;
+      const cleanUsername = baseUsername
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]/g, "");
+
+      const payload = {
+        profile_id: pageProfile.id,
+        admin_username: cleanUsername || `cb-${Math.random().toString(36).substring(2, 7)}`,
+        name: formData.name,
+        bot_name: formData.bot_name,
+        bot_avatar: formData.bot_avatar,
+        admin_name: formData.admin_name,
+        theme_color: formData.theme_color,
+        bg_image_url: formData.bg_image_url,
+      };
+
+      if (editingChatbot) {
+        const { error } = await supabase.from("chatbots").update(payload).eq("id", editingChatbot.id);
+        if (error) throw error;
+        setChatbotMessage({ text: "Chatbot updated!", type: "success" });
+      } else {
+        const { error } = await supabase.from("chatbots").insert(payload);
+        if (error) throw error;
+        setChatbotMessage({ text: "Chatbot created!", type: "success" });
+      }
+      fetchChatbots(pageProfile.id);
+      setTimeout(() => setIsChatbotModalOpen(false), 800);
+    } catch (err: any) {
+      let errorMsg = err.message || "An error occurred";
+      if (err.message?.includes("column") && err.message?.includes("bot_avatar")) {
+        errorMsg = "Database error: missing columns. Please run the SQL fix in Supabase Editor.";
+      }
+      setChatbotMessage({
+        text: err.message.includes("unique") ? "Username slug already exists" : errorMsg,
+        type: "error",
+      });
+    } finally {
+      setChatbotLoading(false);
+    }
+  };
+
+  const deleteChatbot = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!window.confirm("Delete this Chatbot?")) return;
+    const { error } = await supabase.from("chatbots").delete().eq("id", id);
+    if (!error) fetchChatbots(pageProfile.id);
+  };
+
+  const openAiImageModal = (gen?: AiImageGenerator) => {
+    setAiImageMessage(null);
+    if (gen) {
+      setEditingAiImage(gen);
+      setAiImageForm({
+        admin_username: gen.admin_username,
+        name: gen.name,
+        admin_name: gen.admin_name || pageProfile?.name || "",
+        description: gen.description || "",
+        theme_color: gen.theme_color || "#7c3aed",
+        bg_image_url: gen.bg_image_url || "",
+      });
+    } else {
+      setEditingAiImage(null);
+      setAiImageForm({
+        admin_username: pageProfile?.username || "",
+        name: "",
+        admin_name: pageProfile?.name || "",
+        description: "",
+        theme_color: "#7c3aed",
+        bg_image_url: "",
+      });
+    }
+    setIsAiImageModalOpen(true);
+  };
+
+  const saveAiImage = async (formData: any) => {
+    if (!pageProfile) return;
+    setAiImageMessage(null);
+    setAiImageLoading(true);
+
+    if (!formData.admin_username || !formData.name) {
+      setAiImageMessage({ text: "Admin Username and Name are required.", type: "error" });
+      setAiImageLoading(false);
+      return;
+    }
+
+    try {
+      const profileUsername = pageProfile?.username || "user";
+      const baseUsername = formData.admin_username || profileUsername;
+      const cleanUsername = baseUsername
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]/g, "");
+
+      const payload = {
+        profile_id: pageProfile.id,
+        admin_username: cleanUsername || `image-${Math.random().toString(36).substring(2, 7)}`,
+        name: formData.name,
+        admin_name: formData.admin_name,
+        description: formData.description,
+        theme_color: formData.theme_color,
+        bg_image_url: formData.bg_image_url,
+      };
+
+      if (editingAiImage) {
+        const { error } = await supabase.from("ai_image_generators").update(payload).eq("id", editingAiImage.id);
+        if (error) throw error;
+        setAiImageMessage({ text: "Image Generator updated!", type: "success" });
+      } else {
+        const { error } = await supabase.from("ai_image_generators").insert(payload);
+        if (error) throw error;
+        setAiImageMessage({ text: "Image Generator created!", type: "success" });
+      }
+      fetchImageGenerators(pageProfile.id);
+      setTimeout(() => setIsAiImageModalOpen(false), 800);
+    } catch (err: any) {
+      let errorMsg = err.message;
+      if (err.message?.includes("column") || err.message?.includes("relation \"ai_image_generators\" does not exist")) {
+        errorMsg = "Database error: 'ai_image_generators' table or columns missing. Please run the SQL query in Supabase Editor.";
+      } else if (err.message?.includes("unique")) {
+        errorMsg = "Username slug already exists";
+      }
+      
+      setAiImageMessage({
+        text: errorMsg,
+        type: "error",
+      });
+    } finally {
+      setAiImageLoading(false);
+    }
+  };
+
+  const deleteAiImage = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!window.confirm("Delete this Image Generator?")) return;
+    const { error } = await supabase.from("ai_image_generators").delete().eq("id", id);
+    if (!error) fetchImageGenerators(pageProfile.id);
+  };
+
+  const openTiktokModal = (tool?: TikTokDownloader) => {
+    setTiktokMessage(null);
+    if (tool) {
+      setEditingTiktok(tool);
+      setTiktokForm({
+        admin_username: tool.admin_username,
+        name: tool.name,
+        admin_name: tool.admin_name || "",
+        theme_color: tool.theme_color,
+        bg_image_url: tool.bg_image_url || "",
+      });
+    } else {
+      setEditingTiktok(null);
+      setTiktokForm({
+        admin_username: pageProfile?.username || "",
+        name: "",
+        admin_name: pageProfile?.username || "",
+        theme_color: "#4facfe",
+        bg_image_url: "",
+      });
+    }
+    setIsTiktokModalOpen(true);
+  };
+
+  const saveTiktokDownloader = async (formData: any) => {
+    if (!pageProfile) return;
+    setTiktokMessage(null);
+    setTiktokLoading(true);
+
+    if (!formData.admin_username || !formData.name) {
+      setTiktokMessage({ text: "Admin Username and Name are required.", type: "error" });
+      setTiktokLoading(false);
+      return;
+    }
+
+    try {
+      const profileUsername = pageProfile?.username || "user";
+      const baseUsername = formData.admin_username || profileUsername;
+      const cleanUsername = baseUsername
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]/g, "");
+
+      const payload = {
+        profile_id: pageProfile.id,
+        admin_username: cleanUsername || `tiktok-${Math.random().toString(36).substring(2, 7)}`,
+        name: formData.name,
+        admin_name: formData.admin_name,
+        theme_color: formData.theme_color,
+        bg_image_url: formData.bg_image_url,
+      };
+
+      if (editingTiktok) {
+        const { error } = await supabase.from("tiktok_downloaders").update(payload).eq("id", editingTiktok.id);
+        if (error) throw error;
+        setTiktokMessage({ text: "TikTok Downloader updated!", type: "success" });
+      } else {
+        const { error } = await supabase.from("tiktok_downloaders").insert(payload);
+        if (error) throw error;
+        setTiktokMessage({ text: "TikTok Downloader created!", type: "success" });
+      }
+      fetchTiktokDownloaders(pageProfile.id);
+      setTimeout(() => setIsTiktokModalOpen(false), 800);
+    } catch (err: any) {
+      let errorMsg = err.message;
+      if (err.message?.includes("column") || err.message?.includes("relation \"tiktok_downloaders\" does not exist")) {
+        errorMsg = "Database error: 'tiktok_downloaders' table missing. Please run the SQL in Supabase.";
+      }
+      setTiktokMessage({ text: errorMsg, type: "error" });
+    } finally {
+      setTiktokLoading(false);
+    }
+  };
+
+  const deleteTiktokDownloader = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!window.confirm("Delete this TikTok Downloader?")) return;
+    const { error } = await supabase.from("tiktok_downloaders").delete().eq("id", id);
+    if (!error) fetchTiktokDownloaders(pageProfile.id);
   };
 
   const openShortLinkModal = (link?: ShortLink) => {
@@ -1580,12 +1959,29 @@ export default function AdminDashboard() {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-[0_0_15px_rgba(168,85,247,0.4)]">
                 <Shield className="w-4 h-4 text-white" />
               </div>
-              <span className="text-white font-bold text-sm tracking-tight hidden xs:block">
-                Admin Panel
-              </span>
+              <div className="flex flex-col">
+                <span className="text-white font-bold text-sm tracking-tight">
+                  Admin Panel
+                </span>
+                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.1em] leading-none">
+                  Powered by Saqib
+                </span>
+              </div>
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3">
+              <a
+                href="https://www.whatsapp.com/channel/0029VbBTSK1EquiWrUt5uV1I"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#25D366]/10 border border-[#25D366]/20 hover:bg-[#25D366]/20 hover:border-[#25D366] text-[#25D366] hover:text-[#25D366] transition-all text-xs font-bold"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.396.015 12.03c0 2.12.553 4.189 1.602 6.04L0 24l6.117-1.605a11.803 11.803 0 005.925 1.585h.005c6.635 0 12.032-5.396 12.035-12.03.001-3.213-1.248-6.233-3.517-8.503z" />
+                </svg>
+                <span className="hidden xs:inline uppercase">Join Channel</span>
+              </a>
+
               <button
                 onClick={() =>
                   window.open(`/${pageProfile.username}`, "_blank")
@@ -2791,14 +3187,391 @@ export default function AdminDashboard() {
             <CustomToolsTab
               simDatabases={simDatabases}
               smsBombers={smsBombers}
+              chatbots={chatbots}
+              imageGenerators={imageGenerators}
+              tiktokDownloaders={tiktokDownloaders}
               openSimDbModal={openSimDbModal}
               deleteSimDb={deleteSimDb}
               openSmsBomberModal={openSmsBomberModal}
               deleteSmsBomber={deleteSmsBomber}
+              openChatbotModal={openChatbotModal}
+              deleteChatbot={deleteChatbot}
+              openAiImageModal={openAiImageModal}
+              deleteAiImage={deleteAiImage}
+              openTiktokModal={openTiktokModal}
+              deleteTiktokDownloader={deleteTiktokDownloader}
               handleCopyLink={handleCopyLink}
             />
           )}
         </div>
+
+        {/* AI Image Generator Modal */}
+        {isAiImageModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-[#050014]/90 backdrop-blur-xl"
+              onClick={() => setIsAiImageModalOpen(false)}
+            ></div>
+            <div className="relative bg-[#0F0A1F]/95 border border-indigo-500/30 w-full max-w-xl flex flex-col shadow-[0_0_50px_rgba(79,70,229,0.15)] rounded-3xl animate-in zoom-in-95 duration-200 overflow-hidden max-h-[90vh]">
+              <button
+                onClick={() => setIsAiImageModalOpen(false)}
+                className="absolute top-5 right-5 z-20 text-zinc-400 hover:text-white p-2 bg-white/5 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  saveAiImage(aiImageForm);
+                }}
+                className="p-6 md:p-8 space-y-6 overflow-y-auto scrollbar-hide"
+              >
+                <h2 className="text-2xl font-semibold tracking-tight text-white mb-6 flex items-center gap-2">
+                  <Sparkles className="w-6 h-6 text-indigo-400" />
+                  {editingAiImage ? "Edit AI Image" : "Create AI Image Generator"}
+                </h2>
+
+                {aiImageMessage && (
+                  <div
+                    className={`p-4 rounded-xl text-sm border ${aiImageMessage.type === "error" ? "bg-red-500/10 border-red-500/30 text-red-200" : "bg-green-500/10 border-green-500/30 text-green-200"}`}
+                  >
+                    {aiImageMessage.text}
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                      Generator Name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. My Image AI"
+                      value={aiImageForm.name}
+                      onChange={(e) => setAiImageForm({ ...aiImageForm, name: e.target.value })}
+                      className="w-full bg-black/40 border border-white/10 text-white rounded-xl px-4 py-3.5 outline-none focus:border-indigo-500 transition-all font-medium"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                      Description
+                    </label>
+                    <textarea
+                      placeholder="Tool description..."
+                      value={aiImageForm.description || ""}
+                      onChange={(e) => setAiImageForm({ ...aiImageForm, description: e.target.value })}
+                      className="w-full bg-black/40 border border-white/10 text-white rounded-xl px-4 py-3.5 outline-none focus:border-indigo-500 transition-all h-24 resize-none"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                      Theme Color
+                    </label>
+                    <div className="flex items-center gap-4 bg-black/40 border border-white/10 p-3 rounded-xl">
+                      <input
+                        type="color"
+                        value={aiImageForm.theme_color}
+                        onChange={(e) => setAiImageForm({ ...aiImageForm, theme_color: e.target.value })}
+                        className="w-10 h-10 rounded-lg bg-transparent cursor-pointer"
+                      />
+                      <span className="text-sm font-mono text-zinc-400">{aiImageForm.theme_color}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={aiImageLoading}
+                  className="w-full h-14 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl font-bold text-sm tracking-wide shadow-[0_0_25px_rgba(79,70,229,0.3)] transition-all flex items-center justify-center gap-2 mt-4"
+                >
+                  {aiImageLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <>{editingAiImage ? "Update Generator" : "Create Generator"}</>
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* TikTok Downloader Modal */}
+        {isTiktokModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-[#050014]/90 backdrop-blur-xl"
+              onClick={() => setIsTiktokModalOpen(false)}
+            ></div>
+            <div className="relative bg-[#0F0A1F]/95 border border-sky-500/30 w-full max-w-xl flex flex-col shadow-[0_0_50px_rgba(14,165,233,0.15)] rounded-3xl animate-in zoom-in-95 duration-200 overflow-hidden max-h-[90vh]">
+              <button
+                onClick={() => setIsTiktokModalOpen(false)}
+                className="absolute top-5 right-5 z-20 text-zinc-400 hover:text-white p-2 bg-white/5 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  saveTiktokDownloader(tiktokForm);
+                }}
+                className="p-6 md:p-8 space-y-6 overflow-y-auto scrollbar-hide"
+              >
+                <h2 className="text-2xl font-semibold tracking-tight text-white mb-6 flex items-center gap-2">
+                  <Video className="w-6 h-6 text-sky-400" />
+                  {editingTiktok ? "Edit TikTok Downloader" : "Create TikTok Downloader"}
+                </h2>
+
+                {tiktokMessage && (
+                  <div
+                    className={`p-4 rounded-xl text-sm border ${tiktokMessage.type === "error" ? "bg-red-500/10 border-red-500/30 text-red-200" : "bg-sky-500/10 border-sky-500/30 text-sky-200"}`}
+                  >
+                    {tiktokMessage.text}
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                      Tool Name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. My TikTok Saver"
+                      value={tiktokForm.name}
+                      onChange={(e) => setTiktokForm({ ...tiktokForm, name: e.target.value })}
+                      className="w-full bg-black/40 border border-white/10 text-white rounded-xl px-4 py-3.5 outline-none focus:border-sky-500 transition-all font-medium"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                      Admin Name (Powered by)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Your Name"
+                      value={tiktokForm.admin_name}
+                      onChange={(e) => setTiktokForm({ ...tiktokForm, admin_name: e.target.value })}
+                      className="w-full bg-black/40 border border-white/10 text-white rounded-xl px-4 py-3.5 outline-none focus:border-sky-500 transition-all"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                      Theme Color
+                    </label>
+                    <div className="flex items-center gap-4 bg-black/40 border border-white/10 p-3 rounded-xl">
+                      <input
+                        type="color"
+                        value={tiktokForm.theme_color}
+                        onChange={(e) => setTiktokForm({ ...tiktokForm, theme_color: e.target.value })}
+                        className="w-10 h-10 rounded-lg bg-transparent cursor-pointer"
+                      />
+                      <span className="text-sm font-mono text-zinc-400">{tiktokForm.theme_color}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                      Background Image URL
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="https://example.com/bg.jpg"
+                      value={tiktokForm.bg_image_url}
+                      onChange={(e) => setTiktokForm({ ...tiktokForm, bg_image_url: e.target.value })}
+                      className="w-full bg-black/40 border border-white/10 text-white rounded-xl px-4 py-3.5 outline-none focus:border-sky-500 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={tiktokLoading}
+                  className="w-full h-14 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white rounded-xl font-bold text-sm tracking-wide shadow-[0_0_25px_rgba(14,165,233,0.3)] transition-all flex items-center justify-center gap-2 mt-4"
+                >
+                  {tiktokLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <>{editingTiktok ? "Update TikTok Downloader" : "Create Tool"}</>
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Chatbot Form Modal */}
+        {isChatbotModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-[#050014]/80 backdrop-blur-xl"
+              onClick={() => setIsChatbotModalOpen(false)}
+            ></div>
+            <div className="relative bg-[#0F0A1F]/95 border border-purple-500/30 w-full max-w-xl max-h-[90vh] flex flex-col shadow-[0_0_50px_rgba(168,85,247,0.15)] rounded-3xl animate-in zoom-in-95 duration-200 overflow-hidden">
+              <button
+                onClick={() => setIsChatbotModalOpen(false)}
+                className="absolute top-5 right-5 z-10 text-zinc-400 hover:text-white p-2 bg-white/5 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="p-6 border-b border-white/5 flex items-center gap-4 bg-purple-500/5">
+                <div className="p-3 bg-purple-500/20 rounded-2xl text-purple-400">
+                  <Bot size={28} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-white font-mono tracking-tight">
+                    {editingChatbot ? "Edit Chatbot" : "New Chatbot"}
+                  </h3>
+                  <p className="text-sm font-medium text-purple-400/80">
+                    Create your own custom AI chatbot.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                        Basic Details
+                      </h4>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-light text-zinc-300 ml-1">
+                          Tool Name (For dashboard) <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={chatbotForm.name}
+                          onChange={(e) => setChatbotForm({ ...chatbotForm, name: e.target.value })}
+                          placeholder="e.g. My Neural AI"
+                          className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all font-medium text-sm"
+                        />
+                      </div>
+                      
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-light text-zinc-300 ml-1">
+                          Bot Display Name
+                        </label>
+                        <input
+                          type="text"
+                          value={chatbotForm.bot_name}
+                          onChange={(e) => setChatbotForm({ ...chatbotForm, bot_name: e.target.value })}
+                          placeholder="e.g. JARVIS"
+                          className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all font-medium text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-light text-zinc-300 ml-1">
+                        Theme Color (Hex)
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={chatbotForm.theme_color}
+                          onChange={(e) => setChatbotForm({ ...chatbotForm, theme_color: e.target.value })}
+                          className="w-12 h-12 rounded-xl border border-white/10 bg-[#050014] cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={chatbotForm.theme_color}
+                          onChange={(e) => setChatbotForm({ ...chatbotForm, theme_color: e.target.value })}
+                          placeholder="#00d4ff"
+                          className="flex-1 bg-[#050014] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-zinc-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all font-mono text-sm uppercase"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-light text-zinc-300 ml-1">
+                        Wallpapers Option
+                      </label>
+                      <div className="w-full max-w-full overflow-x-auto no-scrollbar pb-2">
+                        <div className="flex gap-2 w-max">
+                          <input
+                            type="file"
+                            ref={chatbotBgInputRef}
+                            onChange={handleChatbotBgUpload}
+                            accept="image/*"
+                            className="hidden"
+                          />
+                          <button
+                            type="button"
+                            disabled={chatbotBgUploading}
+                            onClick={() => chatbotBgInputRef.current?.click()}
+                            className={`w-12 h-16 shrink-0 rounded-lg flex flex-col items-center justify-center border-2 border-dashed transition-all border-white/10 hover:border-purple-500/50 hover:bg-purple-500/10 ${chatbotBgUploading ? "opacity-50" : ""}`}
+                          >
+                            {chatbotBgUploading ? (
+                              <Activity className="w-5 h-5 animate-spin text-purple-500" />
+                            ) : (
+                              <>
+                                <UploadCloud className="w-5 h-5 text-zinc-500" />
+                                <span className="text-[10px] font-bold text-zinc-500 mt-1">Up</span>
+                              </>
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setChatbotForm({ ...chatbotForm, bg_image_url: "" })}
+                            className={`w-12 h-16 shrink-0 rounded-lg flex items-center justify-center border-2 transition-all ${
+                              !chatbotForm.bg_image_url
+                                ? "border-purple-500 bg-white/10"
+                                : "border-white/10 hover:border-white/30"
+                            }`}
+                          >
+                            <span className="text-xs font-bold text-zinc-500">None</span>
+                          </button>
+                          {WALLPAPER_TEMPLATES.map((url, i) => (
+                            <button
+                              type="button"
+                              key={i}
+                              onClick={() => setChatbotForm({ ...chatbotForm, bg_image_url: url })}
+                              className={`w-12 h-16 shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
+                                chatbotForm.bg_image_url === url
+                                  ? "border-purple-500 scale-105"
+                                  : "border-white/10 hover:border-white/30"
+                              }`}
+                            >
+                              <img src={url} alt="bg" className="w-full h-full object-cover" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-white/5 bg-black/20 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setIsChatbotModalOpen(false)}
+                  className="px-6 py-3 text-sm font-bold text-zinc-400 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => saveChatbot(chatbotForm)}
+                  disabled={!chatbotForm.name || !chatbotForm.admin_username || !chatbotForm.admin_name}
+                  className="px-8 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold shadow-lg shadow-purple-500/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {editingChatbot ? "Update Chatbot" : "Create Chatbot"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* SimDb Form Modal */}
         {isSimDbModalOpen && (
@@ -2830,22 +3603,7 @@ export default function AdminDashboard() {
                 )}
 
                 <form onSubmit={(e) => { e.preventDefault(); saveSimDb(simDbForm); }} className="space-y-6 pb-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-light text-zinc-300 ml-1">
-                        Admin Username (URL path: /db/name)
-                      </label>
-                      <input
-                        type="text"
-                        value={simDbForm.admin_username}
-                        onChange={(e) =>
-                          setSimDbForm({ ...simDbForm, admin_username: e.target.value })
-                        }
-                        placeholder="e.g. saqib"
-                        required
-                        className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-mono"
-                      />
-                    </div>
+                  <div className="grid grid-cols-1 gap-6">
                     <div className="flex flex-col gap-2">
                       <label className="text-sm font-light text-zinc-300 ml-1">
                         Sim DB Tool Name
@@ -2858,20 +3616,6 @@ export default function AdminDashboard() {
                         }
                         placeholder="e.g. Saqib Zone"
                         required
-                        className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-light text-zinc-300 ml-1">
-                        Display Admin Name
-                      </label>
-                      <input
-                        type="text"
-                        value={simDbForm.admin_name}
-                        onChange={(e) =>
-                          setSimDbForm({ ...simDbForm, admin_name: e.target.value })
-                        }
-                        placeholder="e.g. Saqib Redin"
                         className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
                       />
                     </div>
@@ -3058,22 +3802,7 @@ export default function AdminDashboard() {
                 )}
 
                 <form onSubmit={(e) => { e.preventDefault(); saveSmsBomber(smsBomberForm); }} className="space-y-6 pb-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-light text-zinc-300 ml-1">
-                        Admin Username (URL path: /bomber/name)
-                      </label>
-                      <input
-                        type="text"
-                        value={smsBomberForm.admin_username}
-                        onChange={(e) =>
-                          setSmsBomberForm({ ...smsBomberForm, admin_username: e.target.value })
-                        }
-                        placeholder="e.g. saqib_bomber"
-                        required
-                        className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all font-mono"
-                      />
-                    </div>
+                  <div className="grid grid-cols-1 gap-6">
                     <div className="flex flex-col gap-2">
                       <label className="text-sm font-light text-zinc-300 ml-1">
                         Tool Name
@@ -3086,20 +3815,6 @@ export default function AdminDashboard() {
                         }
                         placeholder="e.g. Redin Bomber"
                         required
-                        className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-light text-zinc-300 ml-1">
-                        Display Admin Name
-                      </label>
-                      <input
-                        type="text"
-                        value={smsBomberForm.admin_name}
-                        onChange={(e) =>
-                          setSmsBomberForm({ ...smsBomberForm, admin_name: e.target.value })
-                        }
-                        placeholder="e.g. Saqib Redin"
                         className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
                       />
                     </div>
@@ -3259,6 +3974,219 @@ export default function AdminDashboard() {
                       <Save className="w-5 h-5" />
                     )}
                     {editingSmsBomber ? "Update SMS Bomber" : "Create SMS Bomber"}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Chatbot Form Modal */}
+        {isChatbotModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-[#050014]/80 backdrop-blur-xl"
+              onClick={() => setIsChatbotModalOpen(false)}
+            ></div>
+            <div className="relative bg-[#0F0A1F]/95 border border-[#ff2d75]/30 w-full max-w-xl max-h-[90vh] flex flex-col shadow-[0_0_50px_rgba(255,45,117,0.15)] rounded-3xl animate-in zoom-in-95 duration-200 overflow-hidden">
+              <button
+                onClick={() => setIsChatbotModalOpen(false)}
+                className="absolute top-5 right-5 z-10 text-zinc-400 hover:text-white p-2 bg-white/5 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="p-6 md:p-8 flex-1 overflow-y-auto no-scrollbar">
+                <h2 className="text-2xl font-semibold tracking-tight text-white mb-6 flex items-center gap-2">
+                  <Brain className="w-6 h-6 text-[#ff2d75]" />
+                  {editingChatbot ? "Edit Chatbot" : "New Chatbot"}
+                </h2>
+
+                {chatbotMessage && (
+                  <div
+                    className={`p-4 rounded-xl mb-6 flex items-start gap-3 border ${
+                      chatbotMessage.type === "error"
+                        ? "bg-red-500/10 border-red-500/50 text-red-400"
+                        : "bg-green-500/10 border-green-500/50 text-green-400"
+                    }`}
+                  >
+                    {chatbotMessage.type === "error" ? (
+                      <AlertCircle className="w-5 h-5 shrink-0" />
+                    ) : (
+                      <Save className="w-5 h-5 shrink-0" />
+                    )}
+                    <span className="text-sm font-medium">{chatbotMessage.text}</span>
+                  </div>
+                )}
+
+                <form onSubmit={(e) => { e.preventDefault(); saveChatbot(chatbotForm); }} className="space-y-6 pb-4">
+                  <div className="grid grid-cols-1 gap-6">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-light text-zinc-300 ml-1">
+                        Display Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={chatbotForm.name}
+                        onChange={(e) =>
+                          setChatbotForm({ ...chatbotForm, name: e.target.value })
+                        }
+                        placeholder="e.g. My Neural AI"
+                        className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-[#ff2d75] focus:ring-1 focus:ring-[#ff2d75] transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-light text-zinc-300 ml-1">
+                        Bot Title (Header)
+                      </label>
+                      <input
+                        type="text"
+                        value={chatbotForm.bot_name}
+                        onChange={(e) =>
+                          setChatbotForm({ ...chatbotForm, bot_name: e.target.value })
+                        }
+                        placeholder="e.g. NEURAL AI // v2.0"
+                        className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-[#ff2d75] focus:ring-1 focus:ring-[#ff2d75] transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-light text-zinc-300 ml-1">
+                        Bot Avatar Option
+                      </label>
+                      <div className="w-full max-w-full overflow-x-auto no-scrollbar pb-2">
+                        <div className="flex gap-2 w-max">
+                          <input
+                            type="file"
+                            ref={chatbotAvatarInputRef}
+                            onChange={handleChatbotAvatarUpload}
+                            accept="image/*"
+                            className="hidden"
+                          />
+                          <button
+                            type="button"
+                            disabled={chatbotAvatarUploading}
+                            onClick={() => chatbotAvatarInputRef.current?.click()}
+                            className={`w-12 h-16 shrink-0 rounded-lg flex flex-col items-center justify-center border-2 border-dashed transition-all border-white/10 hover:border-[#ff2d75]/50 hover:bg-[#ff2d75]/10 ${chatbotAvatarUploading ? "opacity-50" : ""}`}
+                          >
+                            {chatbotAvatarUploading ? (
+                              <Activity className="w-5 h-5 animate-spin text-[#ff2d75]" />
+                            ) : (
+                              <>
+                                <UploadCloud className="w-5 h-5 text-zinc-500" />
+                                <span className="text-[10px] font-bold text-zinc-500 mt-1">Up</span>
+                              </>
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setChatbotForm({ ...chatbotForm, bot_avatar: "" })}
+                            className={`w-12 h-16 shrink-0 rounded-lg flex items-center justify-center border-2 transition-all ${
+                              !chatbotForm.bot_avatar ? "border-[#ff2d75] bg-white/10" : "border-white/10 hover:border-white/30"
+                            }`}
+                          >
+                            <span className="text-xs font-bold text-zinc-500">None</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-light text-zinc-300 ml-1">
+                        Theme Neon Color
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="color"
+                          value={chatbotForm.theme_color}
+                          onChange={(e) =>
+                            setChatbotForm({ ...chatbotForm, theme_color: e.target.value })
+                          }
+                          className="w-12 h-12 rounded-lg bg-black/40 border border-white/10 cursor-pointer p-1 transition-all hover:scale-110"
+                        />
+                        <input
+                          type="text"
+                          value={chatbotForm.theme_color}
+                          onChange={(e) =>
+                            setChatbotForm({ ...chatbotForm, theme_color: e.target.value })
+                          }
+                          placeholder="#ff2d75"
+                          className="w-full bg-[#050014] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-zinc-600 focus:border-[#ff2d75] focus:ring-1 focus:ring-[#ff2d75] transition-all font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-light text-zinc-300 ml-1">
+                      Wallpapers Option
+                    </label>
+                    <div className="w-full max-w-full overflow-x-auto no-scrollbar pb-2">
+                      <div className="flex gap-2 w-max">
+                        <input
+                          type="file"
+                          ref={chatbotBgInputRef}
+                          onChange={handleChatbotBgUpload}
+                          accept="image/*"
+                          className="hidden"
+                        />
+                        <button
+                          type="button"
+                          disabled={chatbotBgUploading}
+                          onClick={() => chatbotBgInputRef.current?.click()}
+                          className={`w-12 h-16 shrink-0 rounded-lg flex flex-col items-center justify-center border-2 border-dashed transition-all border-white/10 hover:border-[#ff2d75]/50 hover:bg-[#ff2d75]/10 ${chatbotBgUploading ? "opacity-50" : ""}`}
+                        >
+                          {chatbotBgUploading ? (
+                            <Activity className="w-5 h-5 animate-spin text-[#ff2d75]" />
+                          ) : (
+                            <>
+                              <UploadCloud className="w-5 h-5 text-zinc-500" />
+                              <span className="text-[10px] font-bold text-zinc-500 mt-1">Up</span>
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setChatbotForm({ ...chatbotForm, bg_image_url: "" })}
+                          className={`w-12 h-16 shrink-0 rounded-lg flex items-center justify-center border-2 transition-all ${
+                            !chatbotForm.bg_image_url ? "border-[#ff2d75] bg-white/10" : "border-white/10 hover:border-white/30"
+                          }`}
+                        >
+                          <span className="text-xs font-bold text-zinc-500">None</span>
+                        </button>
+                        {WALLPAPER_TEMPLATES.map((url, i) => (
+                          <button
+                            type="button"
+                            key={i}
+                            onClick={() => setChatbotForm({ ...chatbotForm, bg_image_url: url })}
+                            className={`w-12 h-16 shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
+                              chatbotForm.bg_image_url === url ? "border-[#ff2d75] scale-105" : "border-white/10 hover:border-white/30"
+                            }`}
+                          >
+                            <img src={url} alt="bg" className="w-full h-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={chatbotLoading}
+                    className="w-full bg-[#ff2d75] hover:bg-[#ff2d75]/80 disabled:opacity-50 text-white font-bold py-4 rounded-xl shadow-lg shadow-[#ff2d75]/20 transition-all mt-6 active:scale-[0.98] flex items-center justify-center gap-2"
+                  >
+                    {chatbotLoading ? (
+                      <Activity className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Save className="w-5 h-5" />
+                    )}
+                    {editingChatbot ? "Update Chatbot" : "Create Chatbot"}
                   </button>
                 </form>
               </div>

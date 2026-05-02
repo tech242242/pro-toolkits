@@ -58,9 +58,11 @@ export default function SmsBomberView() {
         .from('sms_bombers')
         .select('*')
         .eq('admin_username', username)
-        .single();
+        .limit(1)
+        .maybeSingle();
         
       if (error || !data) {
+        console.error("Supabase Error:", error);
         setError('SMS Bomber tool not found or inactive.');
       } else {
         setBomberConfig(data);

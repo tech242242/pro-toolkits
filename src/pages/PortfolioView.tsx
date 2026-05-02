@@ -240,7 +240,7 @@ export default function PortfolioView() {
       </nav>
 
       {/* Hero Section */}
-      <main className="max-w-6xl mx-auto px-4 pt-24 pb-12">
+      <main className="max-w-6xl mx-auto px-4 pt-24 pb-32">
         <div className="rgb-border-container shadow-2xl">
           <div className="bg-white/90 backdrop-blur-2xl rounded-[40px] p-6 md:p-12 flex flex-col md:flex-row items-center gap-8 md:gap-16">
             {/* Profile Pic with orbit */}

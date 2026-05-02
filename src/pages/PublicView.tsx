@@ -347,7 +347,7 @@ export default function PublicView() {
         )}
       </div>
 
-      <div className="flex flex-col animate-in fade-in duration-700 w-full relative z-10">
+      <div className="flex flex-col animate-in fade-in duration-700 w-full relative z-10 pb-32">
         <div className="mb-12 border-b border-white/10 pb-8 flex flex-col md:flex-row items-start justify-between gap-6 relative z-10 w-full max-w-5xl mx-auto overflow-hidden">
          <div className="w-full md:w-auto">
              <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2 flex items-center gap-3 md:gap-4 overflow-hidden">

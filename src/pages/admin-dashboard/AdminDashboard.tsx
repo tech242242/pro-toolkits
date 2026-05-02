@@ -2015,7 +2015,7 @@ export default function AdminDashboard() {
       )}
 
       <div
-        className={`flex flex-col animate-in fade-in duration-500 w-full relative z-10 pb-28 md:pb-12 ${isOwner ? "pt-16 sm:pt-20" : ""}`}
+        className={`flex-1 flex flex-col animate-in fade-in duration-500 w-full relative z-10 pb-48 md:pb-12 ${isOwner ? "pt-20 sm:pt-24" : ""}`}
       >
         <div className="mb-8 sm:mb-12 border-b border-white/10 pb-6 sm:pb-8 flex flex-col md:flex-row items-start justify-between gap-6 relative z-10 w-full overflow-hidden">
           <div className="w-full md:w-auto">
@@ -2224,24 +2224,7 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {/* Floating Add Button for Mobile */}
-        {isOwner && (
-          <button
-            onClick={() => {
-              if (activeMainTab === "tools") openToolModal();
-              else if (activeMainTab === "shortlinks") openShortLinkModal();
-              else if (activeMainTab === "portfolios") openPortfolioModal();
-              else {
-                setUploadStep(1);
-                setMediaName("");
-                setIsUploadModalOpen(true);
-              }
-            }}
-            className="md:hidden fixed bottom-6 left-6 z-[80] w-14 h-14 bg-gradient-to-tr from-purple-600 to-indigo-600 text-white rounded-full shadow-[0_10px_25px_rgba(124,58,237,0.5)] flex items-center justify-center border border-white/20 active:scale-95 transition-transform"
-          >
-            <Plus className="w-6 h-6" />
-          </button>
-        )}
+        {/* Removed Floating Add Button for Mobile */}
 
         {message && (
           <div
@@ -6762,8 +6745,8 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
-        <div className="md:hidden fixed bottom-6 left-4 right-4 z-[60] flex items-center justify-center">
-          <div className="w-full max-w-md bg-black/60 backdrop-blur-2xl border border-white/10 rounded-[28px] h-20 flex items-center justify-around px-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-[60] flex items-center justify-center p-4 pb-8 bg-[#0F0A1F]/90 backdrop-blur-3xl border-t border-white/5 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+          <div className="w-full max-w-md flex items-center justify-around px-2">
             <button
               onClick={() => setActiveMainTab("tools")}
               className={`flex flex-col items-center gap-1 flex-1 py-1 transition-all ${activeMainTab === "tools" ? "text-purple-400" : "text-zinc-500 hover:text-zinc-400"}`}
@@ -6771,41 +6754,12 @@ export default function AdminDashboard() {
               <div
                 className={`p-2 rounded-2xl transition-all ${activeMainTab === "tools" ? "bg-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.2)]" : ""}`}
               >
-                <MessageSquare size={20} />
+                <MessageSquare size={18} />
               </div>
-              <span className="text-[9px] font-bold uppercase tracking-widest">
+              <span className="text-[8px] font-bold uppercase tracking-widest">
                 Tools
               </span>
             </button>
-
-            <button
-              onClick={() => setActiveMainTab("uploads")}
-              className={`flex flex-col items-center gap-1 flex-1 py-1 transition-all ${activeMainTab === "uploads" ? "text-pink-400" : "text-zinc-500 hover:text-zinc-400"}`}
-            >
-              <div
-                className={`p-2 rounded-2xl transition-all ${activeMainTab === "uploads" ? "bg-pink-500/20 shadow-[0_0_15px_rgba(219,39,119,0.2)]" : ""}`}
-              >
-                <UploadCloud size={20} />
-              </div>
-              <span className="text-[9px] font-bold uppercase tracking-widest">
-                Media
-              </span>
-            </button>
-
-            {/* Floating Action Button (Center) */}
-            <div className="relative -top-3">
-              <button
-                onClick={() => {
-                  if (activeMainTab === "tools") openToolModal();
-                  else if (activeMainTab === "shortlinks") openShortLinkModal();
-                  else if (activeMainTab === "portfolios") openPortfolioModal();
-                  else setIsUploadModalOpen(true);
-                }}
-                className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-blue-600 flex items-center justify-center text-white shadow-[0_10px_25px_rgba(124,58,237,0.4)] active:scale-90 transition-all border border-white/20"
-              >
-                <Plus size={28} />
-              </button>
-            </div>
 
             <button
               onClick={() => setActiveMainTab("portfolios")}
@@ -6814,10 +6768,29 @@ export default function AdminDashboard() {
               <div
                 className={`p-2 rounded-2xl transition-all ${activeMainTab === "portfolios" ? "bg-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.2)]" : ""}`}
               >
-                <Palette size={20} />
+                <Palette size={18} />
               </div>
-              <span className="text-[9px] font-bold uppercase tracking-widest">
+              <span className="text-[8px] font-bold uppercase tracking-widest">
                 Folio
+              </span>
+            </button>
+
+            {/* Added standard-sized Add button here */}
+            <button
+              onClick={() => {
+                if (activeMainTab === "tools") openToolModal();
+                else if (activeMainTab === "shortlinks") openShortLinkModal();
+                else if (activeMainTab === "portfolios") openPortfolioModal();
+                else if (activeMainTab === "custom_tools") openTiktokModal();
+                else setIsUploadModalOpen(true);
+              }}
+              className="flex flex-col items-center gap-1 flex-1 py-1 transition-all text-purple-400"
+            >
+              <div className="p-2 rounded-full bg-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.4)] border border-purple-500/30">
+                <Plus size={22} />
+              </div>
+              <span className="text-[8px] font-bold uppercase tracking-widest">
+                Add
               </span>
             </button>
 
@@ -6828,9 +6801,9 @@ export default function AdminDashboard() {
               <div
                 className={`p-2 rounded-2xl transition-all ${activeMainTab === "shortlinks" ? "bg-indigo-500/20 shadow-[0_0_15px_rgba(79,70,229,0.2)]" : ""}`}
               >
-                <LinkIcon size={20} />
+                <LinkIcon size={18} />
               </div>
-              <span className="text-[9px] font-bold uppercase tracking-widest">
+              <span className="text-[8px] font-bold uppercase tracking-widest">
                 Links
               </span>
             </button>
@@ -6842,9 +6815,9 @@ export default function AdminDashboard() {
               <div
                 className={`p-2 rounded-2xl transition-all ${activeMainTab === "custom_tools" ? "bg-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.2)]" : ""}`}
               >
-                <FileCode size={20} />
+                <FileCode size={18} />
               </div>
-              <span className="text-[9px] font-bold uppercase tracking-widest">
+              <span className="text-[8px] font-bold uppercase tracking-widest">
                 Custom
               </span>
             </button>

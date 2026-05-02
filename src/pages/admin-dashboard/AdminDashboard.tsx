@@ -2235,7 +2235,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Main Tools Container */}
-        <div className="w-full max-w-5xl mx-auto flex flex-col gap-6 relative z-10 pt-4">
+        <div className="w-full max-w-5xl mx-auto flex flex-col gap-6 relative z-20 pt-4">
           {/* Main Tab Switcher */}
           <div className="md:hidden flex items-center justify-between gap-1 p-1 bg-white/[0.03] backdrop-blur-xl border border-white/5 rounded-2xl w-full mb-2 overflow-x-auto no-scrollbar scroll-smooth">
             <button
@@ -2337,7 +2337,7 @@ export default function AdminDashboard() {
                   </h3>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-32 md:pb-20">
                   {portfolios.map((port) => (
                     <div
                       key={port.id}
@@ -3190,7 +3190,7 @@ export default function AdminDashboard() {
 
         {/* AI Image Generator Modal */}
         {isAiImageModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 pt-24 sm:pt-4">
             <div
               className="absolute inset-0 bg-[#050014]/90 backdrop-blur-xl"
               onClick={() => setIsAiImageModalOpen(false)}
@@ -3283,7 +3283,7 @@ export default function AdminDashboard() {
 
         {/* TikTok Downloader Modal */}
         {isTiktokModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 pt-24 sm:pt-4">
             <div
               className="absolute inset-0 bg-[#050014]/90 backdrop-blur-xl"
               onClick={() => setIsTiktokModalOpen(false)}
@@ -3390,12 +3390,12 @@ export default function AdminDashboard() {
 
         {/* Chatbot Form Modal */}
         {isChatbotModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 pt-24 sm:pt-4">
             <div
-              className="absolute inset-0 bg-[#050014]/80 backdrop-blur-xl"
+              className="absolute inset-0 bg-[#050014]/90 backdrop-blur-2xl"
               onClick={() => setIsChatbotModalOpen(false)}
             ></div>
-            <div className="relative bg-[#0F0A1F]/95 border border-purple-500/30 w-full max-w-xl max-h-[90vh] flex flex-col shadow-[0_0_50px_rgba(168,85,247,0.15)] rounded-3xl animate-in zoom-in-95 duration-200 overflow-hidden">
+            <div className="relative bg-[#0F0A1F]/95 border border-purple-500/30 w-full max-w-xl max-h-[85vh] flex flex-col shadow-[0_0_50px_rgba(168,85,247,0.3)] rounded-3xl animate-in zoom-in-95 duration-200 overflow-hidden">
               <button
                 onClick={() => setIsChatbotModalOpen(false)}
                 className="absolute top-5 right-5 z-10 text-zinc-400 hover:text-white p-2 bg-white/5 rounded-full transition-colors"
@@ -3558,7 +3558,7 @@ export default function AdminDashboard() {
 
         {/* SimDb Form Modal */}
         {isSimDbModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 pt-24 sm:pt-4">
             <div
               className="absolute inset-0 bg-[#050014]/80 backdrop-blur-xl"
               onClick={() => setIsSimDbModalOpen(false)}
@@ -3757,7 +3757,7 @@ export default function AdminDashboard() {
 
         {/* Sms Bomber Form Modal */}
         {isSmsBomberModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 pt-24 sm:pt-4">
             <div
               className="absolute inset-0 bg-[#050014]/80 backdrop-blur-xl"
               onClick={() => setIsSmsBomberModalOpen(false)}
@@ -3966,12 +3966,12 @@ export default function AdminDashboard() {
 
         {/* Chatbot Form Modal */}
         {isChatbotModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 pt-24 sm:pt-4">
             <div
-              className="absolute inset-0 bg-[#050014]/80 backdrop-blur-xl"
+              className="absolute inset-0 bg-[#050014]/90 backdrop-blur-2xl"
               onClick={() => setIsChatbotModalOpen(false)}
             ></div>
-            <div className="relative bg-[#0F0A1F]/95 border border-[#ff2d75]/30 w-full max-w-xl max-h-[90vh] flex flex-col shadow-[0_0_50px_rgba(255,45,117,0.15)] rounded-3xl animate-in zoom-in-95 duration-200 overflow-hidden">
+            <div className="relative bg-[#0F0A1F]/95 border border-[#ff2d75]/30 w-full max-w-xl max-h-[85vh] flex flex-col shadow-[0_0_50px_rgba(255,45,117,0.3)] rounded-3xl animate-in zoom-in-95 duration-200 overflow-hidden">
               <button
                 onClick={() => setIsChatbotModalOpen(false)}
                 className="absolute top-5 right-5 z-10 text-zinc-400 hover:text-white p-2 bg-white/5 rounded-full transition-colors"
@@ -4179,12 +4179,12 @@ export default function AdminDashboard() {
 
         {/* Tool Form Modal */}
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 pt-24 sm:pt-4">
             <div
-              className="absolute inset-0 bg-[#050014]/80 backdrop-blur-xl"
+              className="absolute inset-0 bg-[#050014]/90 backdrop-blur-2xl"
               onClick={() => setIsModalOpen(false)}
             ></div>
-            <div className="relative bg-[#0F0A1F]/95 border border-purple-500/30 w-full max-w-xl max-h-[90vh] flex flex-col shadow-[0_0_50px_rgba(168,85,247,0.15)] rounded-3xl animate-in zoom-in-95 duration-200 overflow-hidden">
+            <div className="relative bg-[#0F0A1F]/95 border border-purple-500/30 w-full max-w-xl max-h-[85vh] flex flex-col shadow-[0_0_50px_rgba(168,85,247,0.3)] rounded-3xl animate-in zoom-in-95 duration-200 overflow-hidden">
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="absolute top-5 right-5 z-10 text-zinc-400 hover:text-white p-2 bg-white/5 rounded-full transition-colors"
@@ -4627,7 +4627,7 @@ export default function AdminDashboard() {
 
         {/* Settings Modal */}
         {isSettingsOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 pt-24 sm:pt-4">
             <div
               className="absolute inset-0 bg-[#050014]/80 backdrop-blur-xl"
               onClick={() => setIsSettingsOpen(false)}
@@ -5766,7 +5766,7 @@ export default function AdminDashboard() {
 
         {/* Short Link Modal */}
         {isShortLinkModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 pt-24 sm:pt-4">
             <div
               className="absolute inset-0 bg-[#050014]/80 backdrop-blur-xl"
               onClick={() => setIsShortLinkModalOpen(false)}
@@ -6072,7 +6072,7 @@ export default function AdminDashboard() {
         )}
         {/* Portfolio Modal */}
         {isPortfolioModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 pt-24 sm:pt-4">
             <div
               className="absolute inset-0 bg-[#050014]/90 backdrop-blur-3xl"
               onClick={() => setIsPortfolioModalOpen(false)}
@@ -6434,7 +6434,7 @@ export default function AdminDashboard() {
 
         {/* Data Upload Modal (Step by Step) */}
         {isUploadModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 pt-24 sm:pt-4">
             <div
               className="absolute inset-0 bg-[#050014]/90 backdrop-blur-xl"
               onClick={() => setIsUploadModalOpen(false)}
@@ -6745,83 +6745,83 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-[60] flex items-center justify-center p-4 pb-8 bg-[#0F0A1F]/90 backdrop-blur-3xl border-t border-white/5 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
-          <div className="w-full max-w-md flex items-center justify-around px-2">
-            <button
-              onClick={() => setActiveMainTab("tools")}
-              className={`flex flex-col items-center gap-1 flex-1 py-1 transition-all ${activeMainTab === "tools" ? "text-purple-400" : "text-zinc-500 hover:text-zinc-400"}`}
-            >
-              <div
-                className={`p-2 rounded-2xl transition-all ${activeMainTab === "tools" ? "bg-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.2)]" : ""}`}
-              >
-                <MessageSquare size={18} />
-              </div>
-              <span className="text-[8px] font-bold uppercase tracking-widest">
-                Tools
-              </span>
-            </button>
+      </div>
 
-            <button
-              onClick={() => setActiveMainTab("portfolios")}
-              className={`flex flex-col items-center gap-1 flex-1 py-1 transition-all ${activeMainTab === "portfolios" ? "text-emerald-400" : "text-zinc-500 hover:text-zinc-400"}`}
+      <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md z-[100] flex items-center justify-center p-2 bg-[#0F0A1F]/80 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+        <div className="w-full flex items-center justify-around px-2">
+          <button
+            onClick={() => setActiveMainTab("tools")}
+            className={`flex flex-col items-center gap-1 flex-1 py-1 transition-all ${activeMainTab === "tools" ? "text-purple-400" : "text-zinc-500 hover:text-zinc-400"}`}
+          >
+            <div
+              className={`p-2 rounded-xl transition-all ${activeMainTab === "tools" ? "bg-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.2)]" : ""}`}
             >
-              <div
-                className={`p-2 rounded-2xl transition-all ${activeMainTab === "portfolios" ? "bg-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.2)]" : ""}`}
-              >
-                <Palette size={18} />
-              </div>
-              <span className="text-[8px] font-bold uppercase tracking-widest">
-                Folio
-              </span>
-            </button>
+              <MessageSquare size={18} />
+            </div>
+            <span className="text-[8px] font-bold uppercase tracking-widest">
+              Tools
+            </span>
+          </button>
 
-            {/* Added standard-sized Add button here */}
-            <button
-              onClick={() => {
-                if (activeMainTab === "tools") openToolModal();
-                else if (activeMainTab === "shortlinks") openShortLinkModal();
-                else if (activeMainTab === "portfolios") openPortfolioModal();
-                else if (activeMainTab === "custom_tools") openTiktokModal();
-                else setIsUploadModalOpen(true);
-              }}
-              className="flex flex-col items-center gap-1 flex-1 py-1 transition-all text-purple-400"
+          <button
+            onClick={() => setActiveMainTab("portfolios")}
+            className={`flex flex-col items-center gap-1 flex-1 py-1 transition-all ${activeMainTab === "portfolios" ? "text-emerald-400" : "text-zinc-500 hover:text-zinc-400"}`}
+          >
+            <div
+              className={`p-2 rounded-xl transition-all ${activeMainTab === "portfolios" ? "bg-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.2)]" : ""}`}
             >
-              <div className="p-2 rounded-full bg-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.4)] border border-purple-500/30">
-                <Plus size={22} />
-              </div>
-              <span className="text-[8px] font-bold uppercase tracking-widest">
-                Add
-              </span>
-            </button>
+              <Palette size={18} />
+            </div>
+            <span className="text-[8px] font-bold uppercase tracking-widest">
+              Folio
+            </span>
+          </button>
 
-            <button
-              onClick={() => setActiveMainTab("shortlinks")}
-              className={`flex flex-col items-center gap-1 flex-1 py-1 transition-all ${activeMainTab === "shortlinks" ? "text-indigo-400" : "text-zinc-500 hover:text-zinc-400"}`}
-            >
-              <div
-                className={`p-2 rounded-2xl transition-all ${activeMainTab === "shortlinks" ? "bg-indigo-500/20 shadow-[0_0_15px_rgba(79,70,229,0.2)]" : ""}`}
-              >
-                <LinkIcon size={18} />
-              </div>
-              <span className="text-[8px] font-bold uppercase tracking-widest">
-                Links
-              </span>
-            </button>
+          <button
+            onClick={() => {
+              if (activeMainTab === "tools") openToolModal();
+              else if (activeMainTab === "shortlinks") openShortLinkModal();
+              else if (activeMainTab === "portfolios") openPortfolioModal();
+              else if (activeMainTab === "custom_tools") openTiktokModal();
+              else setIsUploadModalOpen(true);
+            }}
+            className="flex flex-col items-center gap-1 flex-1 py-1 transition-all text-purple-400"
+          >
+            <div className="p-2 rounded-xl bg-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.2)] border border-purple-500/30">
+              <Plus size={18} />
+            </div>
+            <span className="text-[8px] font-bold uppercase tracking-widest">
+              Add
+            </span>
+          </button>
 
-            <button
-              onClick={() => setActiveMainTab("custom_tools")}
-              className={`flex flex-col items-center gap-1 flex-1 py-1 transition-all ${activeMainTab === "custom_tools" ? "text-cyan-400" : "text-zinc-500 hover:text-zinc-400"}`}
+          <button
+            onClick={() => setActiveMainTab("shortlinks")}
+            className={`flex flex-col items-center gap-1 flex-1 py-1 transition-all ${activeMainTab === "shortlinks" ? "text-indigo-400" : "text-zinc-500 hover:text-zinc-400"}`}
+          >
+            <div
+              className={`p-2 rounded-xl transition-all ${activeMainTab === "shortlinks" ? "bg-indigo-500/20 shadow-[0_0_15px_rgba(79,70,229,0.2)]" : ""}`}
             >
-              <div
-                className={`p-2 rounded-2xl transition-all ${activeMainTab === "custom_tools" ? "bg-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.2)]" : ""}`}
-              >
-                <FileCode size={18} />
-              </div>
-              <span className="text-[8px] font-bold uppercase tracking-widest">
-                Custom
-              </span>
-            </button>
-          </div>
+              <LinkIcon size={18} />
+            </div>
+            <span className="text-[8px] font-bold uppercase tracking-widest">
+              Links
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveMainTab("custom_tools")}
+            className={`flex flex-col items-center gap-1 flex-1 py-1 transition-all ${activeMainTab === "custom_tools" ? "text-cyan-400" : "text-zinc-500 hover:text-zinc-400"}`}
+          >
+            <div
+              className={`p-2 rounded-xl transition-all ${activeMainTab === "custom_tools" ? "bg-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.2)]" : ""}`}
+            >
+              <FileCode size={18} />
+            </div>
+            <span className="text-[8px] font-bold uppercase tracking-widest">
+              Custom
+            </span>
+          </button>
         </div>
       </div>
     </div>

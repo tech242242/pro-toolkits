@@ -24,20 +24,13 @@ const HiddenAdminStats = lazy(() => import('./pages/HiddenAdminStats'));
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
 import ProtectedRoute from './components/ProtectedRoute';
 
+import { SkeletonDashboard } from './components/SkeletonLoader';
+
 function HomeOrRedirect() {
   const { user, profile, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center relative w-full h-full text-[#F0F0F0]">
-        <div className="flex flex-col items-center gap-6">
-           <div className="w-16 h-16 border border-zinc-800 flex items-center justify-center relative before:absolute before:inset-0 before:border before:border-cyan-400 before:rotate-45 before:animate-spin">
-              <Activity className="w-6 h-6 text-zinc-500 animate-pulse" />
-           </div>
-           <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-[0.3em] animate-pulse">Initializing Subsystems</div>
-        </div>
-      </div>
-    );
+    return <SkeletonDashboard />;
   }
 
   // Redirect to their dashboard if logged in and profile loaded
@@ -50,16 +43,7 @@ function HomeOrRedirect() {
 }
 
 function LoadingSpinner() {
-  return (
-    <div className="flex-1 flex flex-col items-center justify-center relative w-full h-full text-[#F0F0F0] min-h-[50vh]">
-      <div className="flex flex-col items-center gap-6">
-        <div className="w-16 h-16 border border-zinc-800 flex items-center justify-center relative before:absolute before:inset-0 before:border before:border-cyan-400 before:rotate-45 before:animate-spin">
-          <Activity className="w-6 h-6 text-zinc-500 animate-pulse" />
-        </div>
-        <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-[0.3em] animate-pulse">Loading Subsystems</div>
-      </div>
-    </div>
-  );
+  return <SkeletonDashboard />;
 }
 
 export default function App() {

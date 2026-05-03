@@ -348,7 +348,7 @@ export default function SuperAdminDashboard() {
             </h2>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full text-left whitespace-nowrap min-w-[800px]">
               <thead>
                 <tr className="bg-black/30 border-b border-white/5 text-xs text-zinc-500 uppercase">
                   <th className="p-4">UserID (UUID)</th>
@@ -420,7 +420,7 @@ export default function SuperAdminDashboard() {
             </h2>
           </div>
           <div className="overflow-x-auto max-h-[500px]">
-            <table className="w-full text-left">
+            <table className="w-full text-left whitespace-nowrap min-w-[800px]">
               <thead className="sticky top-0 bg-[#0A0F1E] z-10">
                 <tr className="bg-black/30 border-b border-white/5 text-xs text-zinc-500 uppercase">
                   <th className="p-4">Time</th>
@@ -472,45 +472,51 @@ export default function SuperAdminDashboard() {
 
       {/* Message Modal */}
       {showMessageModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#0A0F1E] border border-indigo-500/30 rounded-2xl p-6 w-full max-w-md shadow-[0_0_40px_rgba(99,102,241,0.15)]">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Shield className="w-5 h-5 text-indigo-400" />
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6 bg-[#030014]/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-[#0A0F1E]/90 border border-indigo-500/30 rounded-[2rem] sm:rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-[0_20px_50px_rgba(99,102,241,0.2)] backdrop-blur-xl relative overflow-hidden animate-in slide-in-from-bottom-8 sm:slide-in-from-bottom-0 sm:zoom-in-95 pb-8 sm:pb-8">
+            
+            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-[40px] -z-10 pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-rose-500/10 rounded-full blur-[40px] -z-10 pointer-events-none"></div>
+
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-black text-white flex items-center gap-3 drop-shadow-md">
+                <div className="w-10 h-10 rounded-full bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center">
+                   <Shield className="w-5 h-5 text-indigo-400" />
+                </div>
                 Message Admin
               </h2>
               <button 
                 onClick={() => setShowMessageModal(false)}
-                className="text-zinc-500 hover:text-white transition-colors"
+                className="p-2 rounded-full bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             
-            <div className="mb-4">
-               <p className="text-zinc-400 text-sm mb-2">Sending notification to <span className="font-bold text-indigo-400">@{selectedAdminUsername}</span>.</p>
+            <div className="mb-6 z-10 relative">
+               <p className="text-zinc-400 text-sm mb-3">Sending secure communication to <span className="font-black text-indigo-400 tracking-wide text-base">@{selectedAdminUsername}</span>.</p>
                <textarea 
                   value={adminMessage}
                   onChange={(e) => setAdminMessage(e.target.value)}
                   placeholder="Enter your message here..."
-                  className="w-full h-32 bg-black/50 border border-white/10 rounded-lg p-3 text-white placeholder-zinc-600 focus:border-indigo-500 outline-none resize-none transition-colors"
+                  className="w-full h-36 bg-black/60 border border-white/10 rounded-2xl p-4 text-white placeholder-zinc-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none resize-none transition-all shadow-inner"
                />
             </div>
             
-            <div className="flex gap-3">
+            <div className="flex gap-4 z-10 relative">
                <button 
                   onClick={() => setShowMessageModal(false)}
-                  className="flex-1 py-2 rounded-lg border border-white/10 text-zinc-400 hover:text-white hover:bg-white/5 transition-colors font-semibold"
+                  className="flex-1 py-3 rounded-2xl border border-white/10 text-zinc-400 hover:text-white hover:bg-white/5 transition-colors font-bold tracking-wider"
                >
                   Cancel
                </button>
                <button 
                   onClick={handleSendMessage}
                   disabled={messageSending || !adminMessage.trim()}
-                  className="flex-1 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold flex justify-center items-center gap-2 disabled:opacity-50 transition-colors"
+                  className="flex-1 py-3 rounded-2xl bg-indigo-600/90 hover:bg-indigo-500 text-white font-bold tracking-wider flex justify-center items-center gap-2 disabled:opacity-50 transition-all shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:-translate-y-0.5"
                >
                   {messageSending ? <Activity className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}
-                  {messageSending ? 'Sending...' : 'Send Message'}
+                  {messageSending ? 'Sending...' : 'Transmit'}
                </button>
             </div>
           </div>

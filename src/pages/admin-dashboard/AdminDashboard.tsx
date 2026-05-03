@@ -82,6 +82,7 @@ import {
 } from "./utils";
 import { Profile, Tool, ShortLink, Portfolio, SimDatabase, SmsBomber, Chatbot, AiImageGenerator, TikTokDownloader } from "./types";
 import { CustomToolsTab } from "./components/tabs/CustomToolsTab";
+import { SkeletonDashboard } from "../../components/SkeletonLoader";
 
 export default function AdminDashboard() {
   const { username } = useParams();
@@ -2043,8 +2044,7 @@ export default function AdminDashboard() {
     return matchesSearch && matchesCat;
   });
 
-  if (loading)
-    return <div className="fixed inset-0 bg-[#030014] z-[9999]" />;
+  if (loading) return <SkeletonDashboard />;
 
   if (pageProfile?.two_factor_enabled && !isPinVerified) {
     return (
@@ -2148,35 +2148,39 @@ export default function AdminDashboard() {
     >
       {/* Super Admin Message Overlay */}
       {superAdminMessage && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="relative w-full max-w-sm rounded-[2rem] p-6 text-white overflow-hidden shadow-2xl bg-white/10 border border-white/20">
-                {/* subtle gradient glow behind */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/30 rounded-full blur-[50px] -z-10"></div>
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/30 rounded-full blur-[50px] -z-10"></div>
+        <div className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-4 sm:p-6 bg-[#030014]/70 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="relative w-full max-w-sm rounded-[2.5rem] sm:rounded-3xl p-6 sm:p-8 text-white overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/20 bg-white/10 backdrop-blur-2xl animate-in slide-in-from-bottom-8 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-500 pb-10 sm:pb-8">
+                {/* Refined gradient glow behind */}
+                <div className="absolute -top-12 -right-12 w-48 h-48 bg-gradient-to-br from-rose-500/50 to-orange-500/20 rounded-full blur-[40px] pointer-events-none"></div>
+                <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-gradient-to-tr from-indigo-500/50 to-purple-500/20 rounded-full blur-[40px] pointer-events-none"></div>
                 
-                <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full border border-white/30 bg-black/40 flex flex-col items-center justify-center p-1 relative">
-                             <Shield className="w-5 h-5 text-indigo-400" />
-                             <div className="absolute inset-0 rounded-full border border-transparent shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div>
+                <div className="flex justify-between items-start mb-6 z-10 relative">
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-full border border-white/30 bg-black/40 flex items-center justify-center relative shadow-[0_0_15px_rgba(99,102,241,0.3)]">
+                             <Shield className="w-7 h-7 text-indigo-400 drop-shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-lg leading-tight">Message From Saqib</h3>
-                            <p className="text-xs text-white/60">Super Admin</p>
+                            <h3 className="font-black text-xl leading-tight tracking-wide text-white drop-shadow-md">Saqib</h3>
+                            <p className="text-xs text-indigo-200 tracking-widest uppercase font-bold mt-0.5">Super Admin</p>
                         </div>
                     </div>
-                    <button onClick={markMessageRead} className="p-1 text-white/50 hover:text-white transition-colors">
+                    <button onClick={markMessageRead} className="p-2 rounded-full bg-white/5 text-white/60 hover:bg-white/20 hover:text-white transition-colors border border-transparent hover:border-white/20">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
                 
-                <div className="py-4 text-sm text-white/90 font-medium leading-relaxed">
-                   {superAdminMessage.message}
+                <div className="py-2 z-10 relative">
+                   <p className="text-[15px] sm:text-base text-white/90 font-medium leading-relaxed drop-shadow-sm break-words whitespace-pre-wrap">
+                     {superAdminMessage.message}
+                   </p>
                 </div>
                 
-                <div className="mt-4 flex gap-3 z-10 relative">
-                    <button onClick={markMessageRead} className="flex-1 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white rounded-xl py-2.5 text-sm font-semibold transition-colors">
-                        Understood
+                <div className="mt-8 flex gap-3 z-10 relative">
+                    <button 
+                      onClick={markMessageRead} 
+                      className="w-full bg-indigo-600/90 hover:bg-indigo-500 backdrop-blur-md border border-indigo-400/50 text-white rounded-2xl py-4 text-sm font-bold tracking-wider transition-all shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_30px_rgba(99,102,241,0.6)] hover:-translate-y-0.5"
+                    >
+                        Mark as Read
                     </button>
                 </div>
             </div>
@@ -2205,61 +2209,58 @@ export default function AdminDashboard() {
 
       {/* Fixed Admin Toolbar */}
       {isOwner && (
-        <div className="fixed top-0 left-0 right-0 z-[100] bg-black/40 backdrop-blur-xl border-b border-white/10 px-4 py-3 sm:px-6">
+        <div className="fixed top-0 left-0 right-0 z-[100] bg-black/40 backdrop-blur-2xl border-b border-white/10 px-4 py-3 sm:px-6">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-[0_0_15px_rgba(168,85,247,0.4)]">
-                <Shield className="w-4 h-4 text-white" />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.3)] border border-white/20 overflow-hidden relative group">
+                <Shield className="w-5 h-5 text-white drop-shadow-md z-10" />
+                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
               </div>
               <div className="flex flex-col">
-                <span className="text-white font-bold text-sm tracking-tight">
-                  Admin Panel
+                <span className="text-white font-black text-sm sm:text-base tracking-tight leading-none italic uppercase">
+                  Saqib
                 </span>
-                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.1em] leading-none">
-                  Powered by Saqib
+                <span className="text-[10px] sm:text-[11px] text-zinc-500 font-black uppercase tracking-[0.2em] mt-1 opacity-80">
+                  Panel v1.0
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-3">
               <a
                 href="https://www.whatsapp.com/channel/0029VbBTSK1EquiWrUt5uV1I"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#25D366]/10 border border-[#25D366]/20 hover:bg-[#25D366]/20 hover:border-[#25D366] text-[#25D366] hover:text-[#25D366] transition-all text-xs font-bold"
+                className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#25D366]/10 border border-[#25D366]/20 hover:bg-[#25D366]/20 hover:border-[#25D366] text-[#25D366] transition-all text-xs font-bold"
               >
-                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
-                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.396.015 12.03c0 2.12.553 4.189 1.602 6.04L0 24l6.117-1.605a11.803 11.803 0 005.925 1.585h.005c6.635 0 12.032-5.396 12.035-12.03.001-3.213-1.248-6.233-3.517-8.503z" />
-                </svg>
-                <span className="hidden xs:inline uppercase">Join Channel</span>
+                <RenderSocialIcon platform="whatsapp" className="w-3.5 h-3.5" />
+                <span className="uppercase tracking-widest font-black">Social</span>
               </a>
 
               <button
-                onClick={() =>
-                  window.open(`/${pageProfile.username}`, "_blank")
-                }
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-purple-500/50 text-zinc-300 hover:text-white transition-all text-xs font-medium"
+                onClick={() => window.open(`/${pageProfile.username}`, "_blank")}
+                className="flex items-center justify-center p-2.5 sm:px-3 sm:py-2 rounded-xl bg-white/5 border border-white/10 hover:border-purple-400/50 text-zinc-300 hover:text-white transition-all text-xs font-bold active:scale-95 sm:flex sm:items-center sm:gap-2"
               >
-                <Globe className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">View Page</span>
+                <Globe className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                <span className="hidden sm:inline">Portal</span>
               </button>
 
               <button
                 onClick={openSettings}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-purple-500/50 text-zinc-300 hover:text-white transition-all text-xs font-medium"
+                className="flex items-center justify-center p-2.5 sm:px-3 sm:py-2 rounded-xl bg-white/5 border border-white/10 hover:border-purple-400/50 text-zinc-300 hover:text-white transition-all text-xs font-bold active:scale-95 sm:flex sm:items-center sm:gap-2"
               >
-                <Settings className="w-3.5 h-3.5" />
+                <Settings className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                 <span className="hidden sm:inline">Settings</span>
               </button>
 
-              <div className="w-px h-4 bg-white/10 mx-1"></div>
+              <div className="hidden sm:block w-px h-5 bg-white/10 mx-1"></div>
 
               <button
                 onClick={handleSignOut}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 hover:border-red-500 text-red-300 hover:text-red-200 transition-all text-xs font-medium"
+                className="flex items-center justify-center p-2.5 sm:px-4 sm:py-2 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all text-xs font-black active:scale-95 sm:flex sm:items-center sm:gap-2 uppercase tracking-widest"
               >
-                <LogOut className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Logout</span>
+                <LogOut className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                <span className="hidden sm:inline">Exit</span>
               </button>
             </div>
           </div>
@@ -2489,43 +2490,28 @@ export default function AdminDashboard() {
         {/* Main Tools Container */}
         <div className="w-full max-w-5xl mx-auto flex flex-col gap-6 relative z-20 pt-4">
           {/* Main Tab Switcher */}
-          <div className="md:hidden flex items-center justify-between gap-1 p-1 bg-white/[0.03] backdrop-blur-xl border border-white/5 rounded-2xl w-full mb-2 overflow-x-auto no-scrollbar scroll-smooth">
-            <button
-              onClick={() => setActiveMainTab("tools")}
-              className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeMainTab === "tools" ? "bg-purple-600 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-400"}`}
-            >
-              Tools
-            </button>
-            <button
-              onClick={() => setActiveMainTab("uploads")}
-              className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeMainTab === "uploads" ? "bg-pink-600 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-400"}`}
-            >
-              Media
-            </button>
-            <button
-              onClick={() => setActiveMainTab("portfolios")}
-              className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeMainTab === "portfolios" ? "bg-emerald-600 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-400"}`}
-            >
-              Folio
-            </button>
-            <button
-              onClick={() => setActiveMainTab("shortlinks")}
-              className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeMainTab === "shortlinks" ? "bg-indigo-600 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-400"}`}
-            >
-              Links
-            </button>
-            <button
-              onClick={() => setActiveMainTab("custom_tools")}
-              className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeMainTab === "custom_tools" ? "bg-cyan-600 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-400"}`}
-            >
-              Create Tool
-            </button>
-            <button
-              onClick={() => setActiveMainTab("analytics")}
-              className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeMainTab === "analytics" ? "bg-amber-600 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-400"}`}
-            >
-              Stats
-            </button>
+          <div className="md:hidden flex items-center gap-2 p-2 bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-2xl w-full mb-4 overflow-x-auto no-scrollbar scroll-smooth">
+            {[
+              { id: "tools", icon: Edit, label: "Tools" },
+              { id: "uploads", icon: UploadCloud, label: "Media" },
+              { id: "portfolios", icon: ImageIcon, label: "Portfolio" },
+              { id: "shortlinks", icon: LinkIcon, label: "Short" },
+              { id: "custom_tools", icon: FileCode, label: "Builder" },
+              { id: "analytics", icon: BarChart3, label: "Stats" }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveMainTab(tab.id as any)}
+                className={`shrink-0 flex flex-col items-center justify-center gap-1.5 min-w-[75px] h-[75px] rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all border ${
+                  activeMainTab === tab.id 
+                  ? "bg-gradient-to-br from-purple-600 to-indigo-600 text-white border-transparent shadow-[0_10px_20px_rgba(139,92,246,0.3)]" 
+                  : "bg-white/5 text-zinc-500 border-white/5"
+                }`}
+              >
+                <tab.icon className="w-5 h-5 mb-0.5" />
+                {tab.label}
+              </button>
+            ))}
           </div>
 
           <div className="hidden md:flex items-center justify-center gap-2 p-1.5 bg-white/[0.03] backdrop-blur-xl border border-white/5 rounded-2xl w-fit mx-auto shadow-2xl">

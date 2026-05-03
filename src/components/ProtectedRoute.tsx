@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import { Activity } from 'lucide-react';
+import { SkeletonDashboard } from './SkeletonLoader';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,9 +13,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { username } = useParams();
 
   if (loading) {
-    return (
-      <div className="fixed inset-0 bg-[#030014] z-[9999]" />
-    );
+    return <SkeletonDashboard />;
   }
 
   // If not logged in, redirect to login
@@ -23,7 +22,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!profile) {
-     return <div className="fixed inset-0 bg-[#030014] z-[9999]" />;
+     return <SkeletonDashboard />;
   }
 
   // Handle username-based authorization if the route has a username param

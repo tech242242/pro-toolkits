@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Shield, User as UserIcon, Search, Megaphone, Lock, MessageSquare, ExternalLink, CheckCircle, X, Globe, Mail, Send, Share2, Eye, Users, UserPlus, UserCheck, Activity, FileArchive, Music2, Video, FileCode, FileText } from 'lucide-react';
+import { Shield, User as UserIcon, Search, Megaphone, Lock, MessageSquare, ExternalLink, CheckCircle, X, Globe, Mail, Send, Share2, Eye, Users, UserPlus, UserCheck, Activity, FileArchive, Music2, Video, FileCode, FileText, Sparkles } from 'lucide-react';
 import { SocialButton, RenderSocialIcon, GlassSocialIcon } from '../components/SocialIcons';
 import { GlowWrapper } from '../components/GlowWrapper';
 import DynamicManifest from '../components/DynamicManifest';
+import { SkeletonProfile } from '../components/SkeletonLoader';
 
 interface Tool {
   id: string;
@@ -392,8 +393,22 @@ export default function PublicView() {
     return url?.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp|svg)$/);
   };
 
-  if (loading) return <div className="flex-1 flex items-center justify-center animate-pulse text-purple-400 font-medium tracking-wider">Loading Space...</div>;
-  if (!pageProfile) return <div className="flex-1 flex flex-col items-center justify-center space-y-4 text-center"><h1 className="text-4xl font-black text-purple-400">404 SPACE NOT FOUND</h1><p className="text-zinc-400 font-light">The requested user '{username}' does not exist.</p></div>;
+  if (loading) return <div className="min-h-full bg-[#030014]"><SkeletonProfile /></div>;
+  if (!pageProfile) return (
+    <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-[#030014] min-h-screen">
+      <div className="relative mb-8">
+        <div className="absolute inset-0 bg-purple-500/20 blur-[100px] rounded-full"></div>
+        <div className="w-24 h-24 rounded-3xl border border-white/10 bg-white/5 flex items-center justify-center relative z-10">
+          <Shield className="w-12 h-12 text-purple-500/50" />
+        </div>
+      </div>
+      <h1 className="text-4xl font-black text-white mb-2 tracking-tight">404 <span className="text-purple-500">VOID</span></h1>
+      <p className="text-zinc-500 font-light max-w-sm">The digital signature '{username}' does not exist in our neural network.</p>
+      <Link to="/" className="mt-8 px-8 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white font-medium transition-all">
+        Return to Core
+      </Link>
+    </div>
+  );
 
   return (
     <div 
@@ -426,69 +441,91 @@ export default function PublicView() {
         )}
       </div>
 
-      <div className="flex flex-col animate-in fade-in duration-700 w-full relative z-10 pb-32">
-        <div className="mb-12 border-b border-white/10 pb-8 flex flex-col md:flex-row items-start justify-between gap-6 relative z-10 w-full max-w-5xl mx-auto overflow-hidden">
-         <div className="w-full md:w-auto">
-             <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2 flex items-center gap-3 md:gap-4 overflow-hidden">
+      <div className="flex flex-col animate-in fade-in duration-1000 slide-in-from-bottom-4 w-full relative z-10 pb-32 px-4 sm:px-6">
+        <div className="mb-10 sm:mb-12 border-b border-white/10 pb-8 flex flex-col md:flex-row items-start justify-between gap-6 relative z-10 w-full max-w-5xl mx-auto">
+         <div className="w-full">
+             <div className="relative flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-6 overflow-hidden">
                 <GlowWrapper 
                     enabled={pageProfile.theme_profile_border} 
                     combo={pageProfile.theme_color_combo} 
-                    roundedClass="rounded-full"
-                    className="shrink-0 shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+                    roundedClass="rounded-[2.5rem]"
+                    className="shrink-0 shadow-[0_0_30px_rgba(168,85,247,0.3)] group"
                 >
-                    {pageProfile.avatar_url ? (
-                       <img src={pageProfile.avatar_url} alt="DP" className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover" />
-                    ) : (
-                       <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-purple-500/20 flex items-center justify-center">
-                         <UserIcon className="w-7 h-7 md:w-8 md:h-8 text-purple-300" />
-                       </div>
-                    )}
+                    <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-[2.3rem] overflow-hidden bg-black/40 border border-white/10">
+                        {pageProfile.avatar_url ? (
+                           <img src={pageProfile.avatar_url} alt="DP" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        ) : (
+                           <div className="w-full h-full flex items-center justify-center">
+                             <UserIcon className="w-12 h-12 text-purple-300/50" />
+                           </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"></div>
+                    </div>
                 </GlowWrapper>
-                <span 
-                    className="drop-shadow-[0_0_15px_rgba(168,85,247,0.5)] truncate"
-                    style={{ color: pageProfile.theme_username_color || 'transparent', background: !pageProfile.theme_username_color ? 'linear-gradient(to right, #a78bfa, #818cf8)' : 'none', WebkitBackgroundClip: !pageProfile.theme_username_color ? 'text' : 'initial', WebkitTextFillColor: pageProfile.theme_username_color || 'transparent' }}
-                >
-                  @{pageProfile.username}
-                </span>
-             </h1>
-             <div className="flex items-center gap-3 text-purple-200/60 font-medium text-xs md:text-sm pl-1 md:pl-2">
-                <Shield className="w-4 h-4 text-indigo-400 shrink-0" />
-                <span>Verified Creator Space</span>
-             </div>
 
-             {pageProfile.description && (
-                 <p className="mt-3 pl-1 md:pl-2 text-sm md:text-base max-w-2xl font-light leading-relaxed opacity-90">
-                     {pageProfile.description}
-                 </p>
-             )}
+                <div className="flex-1 min-w-0 py-2">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter mb-1 sm:mb-2 flex flex-col sm:flex-row items-center gap-2 group cursor-default">
+                        <span 
+                            className="drop-shadow-[0_0_15px_rgba(168,85,247,0.4)] truncate max-w-full"
+                            style={{ 
+                              color: pageProfile.theme_username_color || 'white'
+                            }}
+                        >
+                          {pageProfile.username}
+                        </span>
+                        <div className="hidden sm:flex items-center px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] uppercase tracking-widest text-indigo-400 font-bold h-fit mt-1">
+                           <Sparkles className="w-3 h-3 mr-1" />
+                           Verified
+                        </div>
+                    </h1>
 
-             <div className="flex items-center gap-4 mt-4 pl-1 md:pl-2">
-                <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium opacity-80">
-                  <Eye className="w-4 h-4 text-purple-400" />
-                  <span>{pageProfile.views_count || 0} Views</span>
+                    <div className="flex items-center justify-center sm:justify-start gap-3 text-purple-200/50 font-medium text-xs md:text-sm">
+                        <Globe className="w-4 h-4 text-indigo-400 shrink-0" />
+                        <span className="truncate">Digital Identity Protocol v1.4</span>
+                    </div>
+
+                    {pageProfile.description && (
+                        <p className="mt-4 text-sm md:text-base max-w-2xl font-normal leading-relaxed opacity-80 text-zinc-300">
+                            {pageProfile.description}
+                        </p>
+                    )}
+
+                    <div className="grid grid-cols-2 sm:flex sm:items-center gap-4 mt-6">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-3 sm:p-0 rounded-2xl sm:rounded-none bg-white/5 sm:bg-transparent border border-white/10 sm:border-none">
+                          <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-white/90">
+                            <Eye className="w-4 h-4 text-indigo-400" />
+                            <span>{pageProfile.views_count || 0}</span>
+                          </div>
+                          <span className="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-widest font-bold">Views</span>
+                        </div>
+                        
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-3 sm:p-0 rounded-2xl sm:rounded-none bg-white/5 sm:bg-transparent border border-white/10 sm:border-none">
+                          <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-white/90">
+                            <Users className="w-4 h-4 text-emerald-400" />
+                            <span>{pageProfile.followers_count || 0}</span>
+                          </div>
+                          <span className="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-widest font-bold">Fans</span>
+                        </div>
+
+                        <button 
+                          onClick={toggleFollow}
+                          disabled={followLoading}
+                          className={`col-span-2 sm:col-span-1 sm:ml-4 px-8 py-3 rounded-2xl text-sm font-black transition-all flex items-center justify-center gap-2 ${
+                            isFollowing 
+                            ? 'bg-white/10 text-white border border-white/20' 
+                            : 'bg-white text-black hover:bg-zinc-200 shadow-[0_10px_20px_rgba(255,255,255,0.1)] active:scale-95'
+                          } disabled:opacity-50`}
+                        >
+                          {followLoading ? (
+                            <Activity className="w-4 h-4 animate-spin" />
+                          ) : isFollowing ? (
+                            <><UserCheck className="w-4 h-4" /> Following</>
+                          ) : (
+                            <><UserPlus className="w-4 h-4" /> Follow Profile</>
+                          )}
+                        </button>
+                    </div>
                 </div>
-                <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium opacity-80">
-                  <Users className="w-4 h-4 text-blue-400" />
-                  <span>{pageProfile.followers_count || 0} Followers</span>
-                </div>
-                
-                <button 
-                  onClick={toggleFollow}
-                  disabled={followLoading}
-                  className={`ml-2 px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 ${
-                    isFollowing 
-                    ? 'bg-white/10 text-white border border-white/20' 
-                    : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)] hover:shadow-[0_0_25px_rgba(168,85,247,0.6)]'
-                  } disabled:opacity-50`}
-                >
-                  {followLoading ? (
-                    <Activity className="w-3 h-3 animate-spin" />
-                  ) : isFollowing ? (
-                    <><UserCheck className="w-3 h-3" /> Following</>
-                  ) : (
-                    <><UserPlus className="w-3 h-3" /> Follow</>
-                  )}
-                </button>
              </div>
 
              {pageProfile.phone_number && (
@@ -558,65 +595,71 @@ export default function PublicView() {
           </div>
 
           {/* Tools Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 md:gap-8 mt-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 md:gap-8 mt-6">
               {filteredTools.map((tool) => (
-                  <div key={tool.id} className="flex flex-col items-center group relative">
+                  <div key={tool.id} className="flex flex-col items-center group relative animate-in zoom-in duration-500">
                       <GlowWrapper 
                           enabled={pageProfile.theme_buttons_border} 
                           combo={pageProfile.theme_color_combo} 
-                          roundedClass="rounded-2xl"
-                          className="w-full aspect-square shadow-[0_0_20px_rgba(0,0,0,0.5)] cursor-pointer"
+                          roundedClass="rounded-[2rem]"
+                          className="w-full aspect-square shadow-[0_15px_35px_rgba(0,0,0,0.4)] cursor-pointer active:scale-95 transition-transform"
                           onClick={(e: React.MouseEvent) => handleToolClick(tool, e)}
                       >
-                          <div className="w-full h-full relative rounded-[calc(1rem-2px)] overflow-hidden bg-white/[0.02] backdrop-blur-lg border border-white/10 group-hover:border-purple-400/60 transition-all flex items-center justify-center">
+                          <div className="w-full h-full relative rounded-[calc(2rem-2px)] overflow-hidden bg-white/[0.03] backdrop-blur-xl border border-white/10 group-hover:border-white/40 transition-all flex items-center justify-center">
                               {isImage(tool.image_url || tool.link_url) ? (
-                                <img src={tool.image_url} alt={tool.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                <img src={tool.image_url} alt={tool.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                               ) : (
-                                <div className="flex flex-col items-center gap-2 group-hover:scale-110 transition-transform duration-500">
+                                <div className="flex flex-col items-center gap-2 group-hover:scale-110 transition-transform duration-700">
                                    {getMediaIcon(tool)}
                                 </div>
                               )}
                               
-                              {/* Overlay Indicators */}
-                              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors z-10"></div>
+                              {/* Overlay Indicator Gradients */}
+                              <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent opacity-60 group-hover:opacity-20 transition-opacity z-10"></div>
                               
-                              <div className="absolute bottom-2 left-2 flex gap-1 z-20">
+                              <div className="absolute top-3 right-3 flex flex-col gap-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 duration-300">
+                                  <button 
+                                     onClick={(e) => handleToolShare(e, tool)} 
+                                     className="w-8 h-8 flex items-center justify-center bg-white/10 backdrop-blur-md rounded-full border border-white/20 text-white hover:bg-white hover:text-black transition-all"
+                                     title="Share Tool"
+                                  >
+                                      <Share2 className="w-4 h-4" />
+                                  </button>
+                                  {tool.is_locked && (
+                                     <div className="w-8 h-8 flex items-center justify-center bg-amber-500/20 backdrop-blur-md rounded-full border border-amber-500/40 text-amber-400">
+                                        <Lock className="w-4 h-4" />
+                                     </div>
+                                  )}
+                              </div>
+
+                              <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between z-20">
                                   {tool.video_urls && tool.video_urls.length > 0 && (
                                      <button 
                                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); openVideoModal(tool.video_urls!); }}
-                                        className="p-1 px-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-purple-500/50 text-white hover:text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.4)] flex items-center gap-1 group-hover:bg-purple-500/20 transition-all"
-                                        title="Watch Videos"
+                                        className="py-1 px-2.5 bg-black/60 backdrop-blur-md rounded-xl border border-white/10 text-white hover:bg-white hover:text-black shadow-lg flex items-center gap-1.5 transition-all text-[10px] font-black uppercase tracking-tighter"
                                       >
-                                          <Video className="w-3 h-3 group-hover:scale-110 transition-transform" />
-                                          <span className="text-[10px] font-bold">{tool.video_urls.length > 1 ? `${tool.video_urls.length} Vids` : 'Vid'}</span>
+                                          <Video className="w-3.5 h-3.5" />
+                                          {tool.video_urls.length > 1 ? `${tool.video_urls.length} VIDS` : 'PREVIEW'}
                                       </button>
                                   )}
-                                  <button 
-                                     onClick={(e) => handleToolShare(e, tool)} 
-                                     className="p-1 px-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 text-white hover:text-emerald-300"
-                                     title="Share Tool"
-                                  >
-                                      <Share2 className="w-3 h-3" />
-                                  </button>
-                                  {tool.is_locked && (
-                                      <div className="p-1 px-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-amber-500/30">
-                                          <Lock className="w-3 h-3 text-amber-400 shadow-sm" />
-                                      </div>
-                                  )}
+                                  
                                   {tool.is_gated && (
-                                      <div className="p-1 px-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-pink-500/30">
+                                      <div className="ml-auto p-1.5 bg-pink-500/20 backdrop-blur-md rounded-full border border-pink-500/40">
                                           <MessageSquare className="w-3 h-3 text-pink-400 shadow-sm" />
                                       </div>
                                   )}
                               </div>
                           </div>
                       </GlowWrapper>
-                      <div className="mt-3 flex flex-col items-center text-center pointer-events-none">
-                          <h3 className="text-sm md:text-[15px] font-bold tracking-tight text-white px-2 line-clamp-1 drop-shadow-md">
+                      <div className="mt-4 flex flex-col items-center text-center pointer-events-none w-full">
+                          <h3 className="text-[15px] font-black tracking-tight text-white/90 px-2 line-clamp-1 drop-shadow-md">
                               {tool.name}
                           </h3>
                           {tool.category && (
-                             <span className="text-[10px] text-purple-300/70 mt-0.5 uppercase tracking-[0.1em] font-black">{tool.category}</span>
+                             <div className="flex items-center gap-1.5 mt-0.5 opacity-40">
+                                <span className="w-1 h-1 rounded-full bg-indigo-500" />
+                                <span className="text-[9px] text-white uppercase tracking-[0.2em] font-black">{tool.category}</span>
+                             </div>
                           )}
                       </div>
                   </div>

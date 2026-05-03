@@ -2165,7 +2165,7 @@ export default function AdminDashboard() {
       )}
 
       <div
-        className={`flex-1 flex flex-col animate-in fade-in duration-500 w-full relative z-10 pb-48 md:pb-12 ${isOwner ? "pt-20 sm:pt-24" : ""}`}
+        className={`flex-1 flex flex-col animate-in fade-in duration-500 w-full relative pb-48 md:pb-12 ${isOwner ? "pt-20 sm:pt-24" : ""}`}
       >
         <div className="mb-8 sm:mb-12 border-b border-white/10 pb-6 sm:pb-8 flex flex-col md:flex-row items-start justify-between gap-6 relative z-10 w-full overflow-hidden">
           <div className="w-full md:w-auto">
@@ -3478,7 +3478,7 @@ export default function AdminDashboard() {
 
         {/* AI Image Generator Modal */}
         {isAiImageModalOpen && (
-          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-4 overflow-y-auto">
+          <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-start p-4 pt-20 sm:pt-16 overflow-y-auto custom-scrollbar">
             <div
               className="absolute inset-0 bg-[#050014]/90 backdrop-blur-xl"
               onClick={() => setIsAiImageModalOpen(false)}
@@ -3571,7 +3571,7 @@ export default function AdminDashboard() {
 
         {/* TikTok Downloader Modal */}
         {isTiktokModalOpen && (
-          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-4 overflow-y-auto">
+          <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-start p-4 pt-20 sm:pt-16 overflow-y-auto custom-scrollbar">
             <div
               className="absolute inset-0 bg-[#050014]/90 backdrop-blur-xl"
               onClick={() => setIsTiktokModalOpen(false)}
@@ -3678,7 +3678,7 @@ export default function AdminDashboard() {
 
         {/* Chatbot Form Modal */}
         {isChatbotModalOpen && (
-          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-4 overflow-y-auto">
+          <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-start p-4 pt-20 sm:pt-16 overflow-y-auto custom-scrollbar">
             <div
               className="absolute inset-0 bg-[#050014]/90 backdrop-blur-2xl"
               onClick={() => setIsChatbotModalOpen(false)}
@@ -3846,7 +3846,7 @@ export default function AdminDashboard() {
 
         {/* SimDb Form Modal */}
         {isSimDbModalOpen && (
-          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-4 overflow-y-auto">
+          <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-start p-4 pt-20 sm:pt-16 overflow-y-auto custom-scrollbar">
             <div
               className="absolute inset-0 bg-[#050014]/80 backdrop-blur-xl"
               onClick={() => setIsSimDbModalOpen(false)}
@@ -4045,7 +4045,7 @@ export default function AdminDashboard() {
 
         {/* Sms Bomber Form Modal */}
         {isSmsBomberModalOpen && (
-          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-4 overflow-y-auto">
+          <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-start p-4 pt-20 sm:pt-16 overflow-y-auto custom-scrollbar">
             <div
               className="absolute inset-0 bg-[#050014]/80 backdrop-blur-xl"
               onClick={() => setIsSmsBomberModalOpen(false)}
@@ -4254,7 +4254,7 @@ export default function AdminDashboard() {
 
         {/* Chatbot Form Modal */}
         {isChatbotModalOpen && (
-          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-4 overflow-y-auto">
+          <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-start p-4 pt-20 sm:pt-16 overflow-y-auto custom-scrollbar">
             <div
               className="absolute inset-0 bg-[#050014]/90 backdrop-blur-2xl"
               onClick={() => setIsChatbotModalOpen(false)}
@@ -4467,7 +4467,7 @@ export default function AdminDashboard() {
 
         {/* Tool Form Modal */}
         {isModalOpen && (
-          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-4 overflow-y-auto">
+          <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-start p-4 pt-20 sm:pt-16 overflow-y-auto custom-scrollbar">
             <div
               className="absolute inset-0 bg-[#050014]/90 backdrop-blur-2xl"
               onClick={() => setIsModalOpen(false)}
@@ -4915,7 +4915,7 @@ export default function AdminDashboard() {
 
         {/* Settings Modal */}
         {isSettingsOpen && (
-          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-10 overflow-y-auto">
+          <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-start p-4 pt-20 sm:pt-16 overflow-y-auto custom-scrollbar">
             <div
               className="fixed inset-0 bg-[#050014]/90 backdrop-blur-2xl"
               onClick={() => setIsSettingsOpen(false)}
@@ -6108,7 +6108,7 @@ export default function AdminDashboard() {
 
         {/* Short Link Modal */}
         {isShortLinkModalOpen && (
-          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-4 overflow-y-auto">
+          <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-start p-4 pt-20 sm:pt-16 overflow-y-auto custom-scrollbar">
             <div
               className="absolute inset-0 bg-[#050014]/80 backdrop-blur-xl"
               onClick={() => setIsShortLinkModalOpen(false)}
@@ -6414,7 +6414,7 @@ export default function AdminDashboard() {
         )}
         {/* Portfolio Modal */}
         {isPortfolioModalOpen && (
-          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-4 overflow-y-auto">
+          <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-start p-4 pt-20 sm:pt-16 overflow-y-auto custom-scrollbar">
             <div
               className="absolute inset-0 bg-[#050014]/90 backdrop-blur-3xl"
               onClick={() => setIsPortfolioModalOpen(false)}
@@ -6776,7 +6776,7 @@ export default function AdminDashboard() {
 
         {/* Data Upload Modal (Step by Step) */}
         {isUploadModalOpen && (
-          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-4 overflow-y-auto">
+          <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-start p-4 pt-20 sm:pt-16 overflow-y-auto custom-scrollbar">
             <div
               className="absolute inset-0 bg-[#050014]/90 backdrop-blur-xl"
               onClick={() => setIsUploadModalOpen(false)}

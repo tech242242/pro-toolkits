@@ -30,6 +30,8 @@ export interface Profile {
   bg_color?: string;
   bg_image_url?: string;
   bg_gradient?: string;
+  two_factor_enabled?: boolean;
+  two_factor_pin?: string;
 }
 
 export interface Tool {

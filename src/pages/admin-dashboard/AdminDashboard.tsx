@@ -395,6 +395,8 @@ export default function AdminDashboard() {
     bg_color: "#0A0F1E",
     bg_image_url: "",
     bg_gradient: "",
+    two_factor_enabled: false,
+    two_factor_pin: "",
   });
   const [settingsMessage, setSettingsMessage] = useState<{
     text: string;
@@ -404,6 +406,11 @@ export default function AdminDashboard() {
   const [activeSettingsTab, setActiveSettingsTab] = useState<
     "menu" | "profile" | "social" | "popup" | "security" | "theme"
   >("menu");
+  const [isPinVerified, setIsPinVerified] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [pinError, setPinError] = useState("");
+  const [oldPinInput, setOldPinInput] = useState("");
+
   const [activeMainTab, setActiveMainTab] = useState<
     "tools" | "shortlinks" | "portfolios" | "uploads" | "custom_tools" | "analytics"
   >("tools");
@@ -1757,6 +1764,7 @@ export default function AdminDashboard() {
   const openSettings = () => {
     setSettingsMessage(null);
     setActiveSettingsTab("menu");
+    setOldPinInput("");
     setSettingsForm({
       username: pageProfile.username,
       password: "",
@@ -1788,6 +1796,8 @@ export default function AdminDashboard() {
       bg_color: pageProfile.bg_color || "#0A0F1E",
       bg_image_url: pageProfile.bg_image_url || "",
       bg_gradient: pageProfile.bg_gradient || "",
+      two_factor_enabled: pageProfile.two_factor_enabled || false,
+      two_factor_pin: pageProfile.two_factor_pin || "",
     });
     setIsSettingsOpen(true);
   };
@@ -1810,6 +1820,17 @@ export default function AdminDashboard() {
       const desiredUsername = settingsForm.username
         .toLowerCase()
         .replace(/[^a-z0-9_]/g, "");
+
+      // 2FA Logic: If changing PIN, verify old one
+      if (settingsForm.two_factor_pin !== pageProfile.two_factor_pin) {
+        if (pageProfile.two_factor_pin && oldPinInput !== pageProfile.two_factor_pin) {
+          throw new Error("Incorrect Old PIN. Verification failed.");
+        }
+        if (settingsForm.two_factor_pin && !/^[0-9]{6}$/.test(settingsForm.two_factor_pin)) {
+          throw new Error("New PIN must be exactly 6 digits.");
+        }
+      }
+
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
@@ -1842,6 +1863,8 @@ export default function AdminDashboard() {
           bg_color: settingsForm.bg_color,
           bg_image_url: settingsForm.bg_image_url,
           bg_gradient: settingsForm.bg_gradient,
+          two_factor_enabled: settingsForm.two_factor_enabled,
+          two_factor_pin: settingsForm.two_factor_pin,
         })
         .eq("id", user?.id!);
 
@@ -1957,6 +1980,70 @@ export default function AdminDashboard() {
         Loading Space...
       </div>
     );
+
+  if (pageProfile?.two_factor_enabled && !isPinVerified) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-[#030014] flex flex-col items-center justify-center p-6 sm:p-12 overflow-hidden">
+        {/* Animated Background Gradients */}
+        <div className="absolute top-1/4 left-1/4 w-[40vw] h-[40vw] bg-purple-600/20 rounded-full blur-[120px] animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-[40vw] h-[40vw] bg-blue-600/10 rounded-full blur-[100px] animate-pulse delay-700"></div>
+
+        <div className="max-w-md w-full bg-white/[0.03] backdrop-blur-3xl p-8 rounded-[40px] border border-white/10 shadow-2xl relative z-10 text-center space-y-8 animate-in zoom-in-95 duration-500">
+           <div className="w-20 h-20 bg-emerald-500/10 rounded-3xl mx-auto flex items-center justify-center border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
+             <Lock className="w-10 h-10 text-emerald-400" />
+           </div>
+
+           <div className="space-y-2">
+             <h2 className="text-3xl font-black text-white tracking-tight">Security Lock</h2>
+             <p className="text-zinc-400 font-medium text-sm">Enter your 6-digit secure PIN to access dashboard</p>
+           </div>
+
+           <div className="space-y-6">
+             <input
+               type="password"
+               inputMode="numeric"
+               maxLength={6}
+               autoFocus
+               value={pinInput}
+               onChange={(e) => {
+                 const val = e.target.value.replace(/[^0-9]/g, "");
+                 setPinInput(val);
+                 if (val.length === 6) {
+                   if (val === pageProfile.two_factor_pin) {
+                    setIsPinVerified(true);
+                    setPinError("");
+                   } else {
+                    setPinError("Invalid PIN Access Denied.");
+                    setPinInput("");
+                   }
+                 }
+               }}
+               className={`w-full bg-white/[0.03] border ${pinError ? 'border-red-500/50' : 'border-white/10'} rounded-2xl text-center text-4xl tracking-[0.5em] font-black text-white px-5 py-6 outline-none focus:border-emerald-500/50 transition-all placeholder-white/5`}
+               placeholder="******"
+             />
+             
+             {pinError && (
+               <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-2 justify-center animate-in slide-in-from-top-2">
+                 <AlertCircle className="w-4 h-4 text-red-400" />
+                 <span className="text-xs font-bold text-red-300 uppercase tracking-wider">{pinError}</span>
+               </div>
+             )}
+           </div>
+
+           <div className="pt-4 flex flex-col gap-3">
+             <button
+               onClick={handleSignOut}
+               className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-zinc-400 hover:text-white hover:bg-white/10 transition-all font-black text-xs uppercase tracking-widest"
+             >
+               Logout Account
+             </button>
+             <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-tighter">System Locked • MR SAQIB</p>
+           </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!pageProfile)
     return (
       <div className="flex-1 flex flex-col items-center justify-center space-y-4 text-center">
@@ -5352,6 +5439,60 @@ export default function AdminDashboard() {
                           You will be logged out after changing your password.
                         </p>
                       </div>
+
+                      {/* 2FA PIN Settings */}
+                      <div className="pt-6 border-t border-white/10 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400">
+                              <Lock className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-bold text-white">2-Step Verification</h4>
+                              <p className="text-[10px] text-zinc-500 font-medium">Extra 6-digit PIN for dashboard access</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setSettingsForm({ ...settingsForm, two_factor_enabled: !settingsForm.two_factor_enabled })}
+                            className={`w-12 h-6 rounded-full transition-all relative ${settingsForm.two_factor_enabled ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]" : "bg-white/10"}`}
+                          >
+                            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${settingsForm.two_factor_enabled ? "left-7" : "left-1"}`} />
+                          </button>
+                        </div>
+
+                        {settingsForm.two_factor_enabled && (
+                          <div className="space-y-4 pt-2 animate-in fade-in slide-in-from-top-2">
+                            {pageProfile.two_factor_pin && (
+                              <div className="flex flex-col gap-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Current PIN (Required)</label>
+                                <input
+                                  type="password"
+                                  maxLength={6}
+                                  value={oldPinInput}
+                                  onChange={(e) => setOldPinInput(e.target.value.replace(/[^0-9]/g, ""))}
+                                  className="w-full bg-white/[0.03] border border-white/5 rounded-xl text-center text-xl tracking-[1em] font-black text-white px-5 py-3 outline-none"
+                                  placeholder="******"
+                                />
+                              </div>
+                            )}
+                            <div className="flex flex-col gap-2">
+                              <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">
+                                {pageProfile.two_factor_pin ? "New PIN" : "Setup 6-Digit PIN"}
+                              </label>
+                              <input
+                                type="password"
+                                maxLength={6}
+                                value={settingsForm.two_factor_pin}
+                                onChange={(e) => setSettingsForm({ ...settingsForm, two_factor_pin: e.target.value.replace(/[^0-9]/g, "") })}
+                                className="w-full bg-white/[0.03] border border-white/10 rounded-xl text-center text-xl tracking-[1em] font-black text-emerald-400 px-5 py-3 outline-none focus:border-emerald-500/50"
+                                placeholder="000000"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
                       <div className="pt-6 border-t border-white/10">
                         <button
                           type="button"

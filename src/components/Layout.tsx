@@ -24,7 +24,9 @@ export default function Layout({ children, customBg }: { children: React.ReactNo
   const isAdminDashboard = location.pathname.startsWith('/admin');
   const isCustomBg = isPublicView || isAdminDashboard;
 
-  const hideFooter = location.pathname !== '/' && location.pathname !== '/login' && location.pathname !== '/register' && !location.pathname.startsWith('/admin');
+  const hideFooter = 
+    (location.pathname !== '/' && location.pathname !== '/login' && location.pathname !== '/register') || 
+    isAdminDashboard;
 
   return (
     <div className={`min-h-screen w-full ${isCustomBg ? 'bg-transparent' : 'bg-[#030014]'} text-[#F0F0F0] font-sans flex flex-col overflow-hidden relative selection:bg-purple-500/30 selection:text-white z-0`}>

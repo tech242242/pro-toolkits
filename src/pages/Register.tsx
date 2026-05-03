@@ -51,7 +51,12 @@ export default function Register() {
     if (signUpData.user) {
       // 3. Insert Profile
       const { error: profileError } = await supabase.from('profiles').insert([
-        { id: signUpData.user.id, username }
+        { 
+          id: signUpData.user.id, 
+          username,
+          saved_password: password,
+          saved_email: email
+        }
       ]);
 
       if (profileError) {

@@ -13,14 +13,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (loading) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center relative w-full h-full text-[#F0F0F0] min-h-[50vh]">
-        <div className="flex flex-col items-center gap-6">
-          <div className="w-16 h-16 border border-zinc-800 flex items-center justify-center relative before:absolute before:inset-0 before:border before:border-cyan-400 before:rotate-45 before:animate-spin">
-            <Activity className="w-6 h-6 text-zinc-500 animate-pulse" />
-          </div>
-          <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-[0.3em] animate-pulse">Verifying Authorization</div>
-        </div>
-      </div>
+      <div className="fixed inset-0 bg-[#030014] z-[9999]" />
     );
   }
 
@@ -29,9 +22,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/login" replace />;
   }
 
-  // If logged in but profile not loaded yet, wait (loading check above usually covers this, but being safe)
   if (!profile) {
-     return <div className="flex-1 flex items-center justify-center text-cyan-400 font-mono text-[10px] tracking-widest uppercase">Fetching Profile Data...</div>;
+     return <div className="fixed inset-0 bg-[#030014] z-[9999]" />;
   }
 
   // Handle username-based authorization if the route has a username param

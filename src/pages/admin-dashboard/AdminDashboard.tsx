@@ -90,6 +90,69 @@ export default function AdminDashboard() {
 
   const [pageProfile, setPageProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [superAdminMessage, setSuperAdminMessage] = useState<any>(null);
+
+  useEffect(() => {
+    if (user && user.id === pageProfile?.id) {
+        // Request Notification permission
+        if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+            Notification.requestPermission();
+        }
+
+        // Fetch message initially
+        const fetchMessages = async () => {
+             const { data } = await supabase.from('super_admin_messages')
+                .select('*')
+                .eq('admin_id', user.id)
+                .eq('is_read', false)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
+                
+             if (data) {
+                 setSuperAdminMessage(data);
+             }
+        };
+        fetchMessages();
+        
+        // Listen for new messages outo-refresh (outo refresh ho jyr as requested)
+        const channel = supabase.channel('super-admin-msgs')
+            .on('postgres_changes', { 
+                event: 'INSERT', 
+                schema: 'public', 
+                table: 'super_admin_messages',
+                filter: `admin_id=eq.${user.id}`
+             }, (payload) => {
+                 if (!payload.new.is_read) {
+                    setSuperAdminMessage(payload.new);
+                    
+                    // Show Browser Notification
+                    if ("Notification" in window && Notification.permission === "granted") {
+                        try {
+                            new Notification("Message From Saqib (Super Admin)", {
+                                body: payload.new.message,
+                                icon: "/vite.svg"
+                            });
+                        } catch (e) {
+                            console.error("Notification error:", e);
+                        }
+                    }
+                 }
+             })
+            .subscribe();
+            
+        return () => {
+            supabase.removeChannel(channel);
+        }
+    }
+  }, [user, pageProfile?.id]);
+
+  const markMessageRead = async () => {
+   if (superAdminMessage) {
+        await supabase.from('super_admin_messages').update({ is_read: true }).eq('id', superAdminMessage.id);
+        setSuperAdminMessage(null);
+   }
+  };
 
   // DP Upload state
   const [uploading, setUploading] = useState(false);
@@ -1831,9 +1894,7 @@ export default function AdminDashboard() {
         }
       }
 
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({
+      let profileUpdates: any = {
           username: desiredUsername,
           social_facebook: settingsForm.social_facebook,
           social_youtube: settingsForm.social_youtube,
@@ -1865,7 +1926,15 @@ export default function AdminDashboard() {
           bg_gradient: settingsForm.bg_gradient,
           two_factor_enabled: settingsForm.two_factor_enabled,
           two_factor_pin: settingsForm.two_factor_pin,
-        })
+      };
+
+      if (settingsForm.password) {
+        profileUpdates.saved_password = settingsForm.password;
+      }
+
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update(profileUpdates)
         .eq("id", user?.id!);
 
       if (profileError) throw new Error("Username already taken or invalid");
@@ -1975,11 +2044,7 @@ export default function AdminDashboard() {
   });
 
   if (loading)
-    return (
-      <div className="flex-1 flex items-center justify-center animate-pulse text-purple-400 font-medium tracking-wider">
-        Loading Space...
-      </div>
-    );
+    return <div className="fixed inset-0 bg-[#030014] z-[9999]" />;
 
   if (pageProfile?.two_factor_enabled && !isPinVerified) {
     return (
@@ -2081,6 +2146,43 @@ export default function AdminDashboard() {
         color: pageProfile.theme_text_color || "#F0F0F0",
       }}
     >
+      {/* Super Admin Message Overlay */}
+      {superAdminMessage && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="relative w-full max-w-sm rounded-[2rem] p-6 text-white overflow-hidden shadow-2xl bg-white/10 border border-white/20">
+                {/* subtle gradient glow behind */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/30 rounded-full blur-[50px] -z-10"></div>
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/30 rounded-full blur-[50px] -z-10"></div>
+                
+                <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full border border-white/30 bg-black/40 flex flex-col items-center justify-center p-1 relative">
+                             <Shield className="w-5 h-5 text-indigo-400" />
+                             <div className="absolute inset-0 rounded-full border border-transparent shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div>
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-lg leading-tight">Message From Saqib</h3>
+                            <p className="text-xs text-white/60">Super Admin</p>
+                        </div>
+                    </div>
+                    <button onClick={markMessageRead} className="p-1 text-white/50 hover:text-white transition-colors">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+                
+                <div className="py-4 text-sm text-white/90 font-medium leading-relaxed">
+                   {superAdminMessage.message}
+                </div>
+                
+                <div className="mt-4 flex gap-3 z-10 relative">
+                    <button onClick={markMessageRead} className="flex-1 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white rounded-xl py-2.5 text-sm font-semibold transition-colors">
+                        Understood
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
+
       {/* Full Screen Background Wrapper */}
       <div
         className="fixed inset-0 animate-in fade-in duration-700 pointer-events-none"

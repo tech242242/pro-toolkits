@@ -6,6 +6,7 @@ import { Activity } from 'lucide-react';
 import PWAInstallButton from './components/PWAInstallButton';
 
 // Lazy load pages for faster initial rendering (Code Splitting)
+import GlobalTracker from './components/GlobalTracker';
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const AdminDashboard = lazy(() => import('./pages/admin-dashboard/AdminDashboard'));
@@ -19,6 +20,8 @@ const SmsBomberView = lazy(() => import('./pages/SmsBomberView'));
 const ChatbotView = lazy(() => import('./pages/ChatbotView'));
 const AiImageGeneratorView = lazy(() => import('./pages/AiImageGeneratorView'));
 const TikTokDownloaderView = lazy(() => import('./pages/TikTokDownloaderView'));
+const HiddenAdminStats = lazy(() => import('./pages/HiddenAdminStats'));
+const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
 import ProtectedRoute from './components/ProtectedRoute';
 
 function HomeOrRedirect() {
@@ -63,6 +66,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <GlobalTracker />
         <Layout>
           <Suspense fallback={<LoadingSpinner />}>
             <Routes>
@@ -75,7 +79,9 @@ export default function App() {
               <Route path="/cb/:admin_username" element={<ChatbotView />} />
               <Route path="/image/:admin_username" element={<AiImageGeneratorView />} />
               <Route path="/tiktok/:admin_username" element={<TikTokDownloaderView />} />
+              <Route path="/super-saqib-admin" element={<SuperAdminDashboard />} />
               <Route path="/:username" element={<PublicView />} />
+              <Route path="/:username/saqibadmin" element={<HiddenAdminStats />} />
               <Route path="/:username/link/:slug" element={<ShortLinkRedirect />} />
               <Route path="/:username/media/:toolId/:filename" element={<MediaDownload />} />
               <Route path="/:username/media/:toolId" element={<MediaDownload />} />

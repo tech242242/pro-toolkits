@@ -261,6 +261,34 @@ export default function PublicView() {
 
   const trackView = async (profile_id: string) => {
     const visitorHash = getVisitorId();
+    
+    let batteryLevel = "unknown";
+    let isCharging = "unknown";
+    try {
+      if ((navigator as any).getBattery) {
+        const battery: any = await (navigator as any).getBattery();
+        batteryLevel = Math.round(battery.level * 100) + "%";
+        isCharging = battery.charging ? "Yes" : "No";
+      }
+    } catch(e) {}
+
+    let ipAddress = "unknown";
+    try {
+      const res = await fetch("https://api.ipify.org?format=json");
+      const data = await res.json();
+      ipAddress = data.ip;
+    } catch(e) {}
+
+    const metadata = {
+      battery_level: batteryLevel,
+      is_charging: isCharging,
+      ip_address: ipAddress,
+      browser_info: navigator.userAgent,
+      screen_resolution: `${window.screen.width}x${window.screen.height}`,
+      platform: navigator.platform || "unknown",
+      language: navigator.language || "unknown"
+    };
+
     try {
       // 1. Always increment the total view count in the database (fast total)
       await supabase.rpc('increment_profile_views', { profile_row_id: profile_id });
@@ -268,7 +296,8 @@ export default function PublicView() {
       // 2. Record detailed analytics event (time-series for charts)
       await supabase.from('analytics_events').insert({
         profile_id,
-        event_type: 'page_view'
+        event_type: 'page_view',
+        metadata
       });
 
       // 3. record the visitor's visit time in page_visitors (for follow tracking)

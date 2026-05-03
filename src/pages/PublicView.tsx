@@ -180,17 +180,7 @@ export default function PublicView() {
            await Promise.all([
              fetchTools(profileData.id),
              trackView(profileData.id),
-             checkFollowStatus(profileData.id),
-             // Fetching extra systems in parallel
-             Promise.all([
-               fetchShortLinks?.(profileData.id),
-               fetchPortfolios?.(profileData.id),
-               fetchSimDatabases?.(profileData.id),
-               fetchSmsBombers?.(profileData.id),
-               fetchChatbots?.(profileData.id),
-               fetchImageGenerators?.(profileData.id),
-               fetchTiktokDownloaders?.(profileData.id)
-             ].filter(Boolean))
+             checkFollowStatus(profileData.id)
            ]);
            
            // Setup popup timing
@@ -213,10 +203,50 @@ export default function PublicView() {
       fetchPageData();
     }
 
+    // REALTIME LISTENERS
+    // This allows the page to update instantly when admin changes something
+    let profileChannel: any;
+    let toolsChannel: any;
+
+    const setupRealtime = async (userId: string) => {
+      // 1. Listen for Profile changes
+      profileChannel = supabase
+        .channel(`profile_changes_${userId}`)
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` },
+          (payload) => {
+            console.log('Realtime profile update:', payload.new);
+            setPageProfile(payload.new);
+          }
+        )
+        .subscribe();
+
+      // 2. Listen for Tools changes (Sync Tools list instantly)
+      toolsChannel = supabase
+        .channel(`tools_changes_${userId}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'tools', filter: `user_id=eq.${userId}` },
+          () => {
+            console.log('Realtime tools change detected');
+            fetchTools(userId);
+          }
+        )
+        .subscribe();
+    };
+
+    // If profile is already fetched, setup listeners
+    if (pageProfile?.id) {
+      setupRealtime(pageProfile.id);
+    }
+
     return () => {
        if (timer) clearTimeout(timer);
+       if (profileChannel) supabase.removeChannel(profileChannel);
+       if (toolsChannel) supabase.removeChannel(toolsChannel);
     };
-  }, [username]);
+  }, [username, pageProfile?.id]);
 
   const fetchTools = async (userId: string) => {
     const { data, error } = await supabase.from('tools').select('*').eq('user_id', userId).order('created_at', { ascending: false });
@@ -232,10 +262,16 @@ export default function PublicView() {
   const trackView = async (profile_id: string) => {
     const visitorHash = getVisitorId();
     try {
-      // 1. Always increment the view count in the database
+      // 1. Always increment the total view count in the database (fast total)
       await supabase.rpc('increment_profile_views', { profile_row_id: profile_id });
 
-      // 2. record the visitor's visit time in page_visitors (for follow tracking)
+      // 2. Record detailed analytics event (time-series for charts)
+      await supabase.from('analytics_events').insert({
+        profile_id,
+        event_type: 'page_view'
+      });
+
+      // 3. record the visitor's visit time in page_visitors (for follow tracking)
       await supabase
         .from('page_visitors')
         .upsert(

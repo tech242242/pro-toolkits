@@ -3190,7 +3190,7 @@ export default function AdminDashboard() {
 
         {/* AI Image Generator Modal */}
         {isAiImageModalOpen && (
-          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 pt-24 sm:pt-4">
+          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-4 overflow-y-auto">
             <div
               className="absolute inset-0 bg-[#050014]/90 backdrop-blur-xl"
               onClick={() => setIsAiImageModalOpen(false)}
@@ -3208,7 +3208,7 @@ export default function AdminDashboard() {
                   e.preventDefault();
                   saveAiImage(aiImageForm);
                 }}
-                className="p-6 md:p-8 space-y-6 overflow-y-auto scrollbar-hide pb-40"
+                className="p-6 md:p-8 space-y-6 overflow-y-auto scrollbar-hide pb-60"
               >
                 <h2 className="text-2xl font-semibold tracking-tight text-white mb-6 flex items-center gap-2">
                   <Sparkles className="w-6 h-6 text-indigo-400" />
@@ -3283,7 +3283,7 @@ export default function AdminDashboard() {
 
         {/* TikTok Downloader Modal */}
         {isTiktokModalOpen && (
-          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 pt-24 sm:pt-4">
+          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-4 overflow-y-auto">
             <div
               className="absolute inset-0 bg-[#050014]/90 backdrop-blur-xl"
               onClick={() => setIsTiktokModalOpen(false)}
@@ -3301,7 +3301,7 @@ export default function AdminDashboard() {
                   e.preventDefault();
                   saveTiktokDownloader(tiktokForm);
                 }}
-                className="p-6 md:p-8 space-y-6 overflow-y-auto scrollbar-hide pb-40"
+                className="p-6 md:p-8 space-y-6 overflow-y-auto scrollbar-hide pb-60"
               >
                 <h2 className="text-2xl font-semibold tracking-tight text-white mb-6 flex items-center gap-2">
                   <Video className="w-6 h-6 text-sky-400" />
@@ -3390,7 +3390,7 @@ export default function AdminDashboard() {
 
         {/* Chatbot Form Modal */}
         {isChatbotModalOpen && (
-          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 pt-24 sm:pt-4">
+          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-4 overflow-y-auto">
             <div
               className="absolute inset-0 bg-[#050014]/90 backdrop-blur-2xl"
               onClick={() => setIsChatbotModalOpen(false)}
@@ -3417,7 +3417,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 custom-scrollbar pb-40">
+              <div className="flex-1 overflow-y-auto p-6 custom-scrollbar pb-60">
                 <div className="space-y-6">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -3558,7 +3558,7 @@ export default function AdminDashboard() {
 
         {/* SimDb Form Modal */}
         {isSimDbModalOpen && (
-          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 pt-24 sm:pt-4">
+          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-4 overflow-y-auto">
             <div
               className="absolute inset-0 bg-[#050014]/80 backdrop-blur-xl"
               onClick={() => setIsSimDbModalOpen(false)}
@@ -3571,7 +3571,7 @@ export default function AdminDashboard() {
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="p-6 md:p-8 flex-1 overflow-y-auto custom-scrollbar pb-40">
+              <div className="p-6 md:p-8 flex-1 overflow-y-auto custom-scrollbar pb-60">
                 <h2 className="text-2xl font-semibold tracking-tight text-white mb-6 flex items-center gap-2">
                   <FileCode className="w-6 h-6 text-cyan-400" />
                   {editingSimDb ? "Edit Sim Database" : "New Sim Database"}
@@ -3757,7 +3757,7 @@ export default function AdminDashboard() {
 
         {/* Sms Bomber Form Modal */}
         {isSmsBomberModalOpen && (
-          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 pt-24 sm:pt-4">
+          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-4 overflow-y-auto">
             <div
               className="absolute inset-0 bg-[#050014]/80 backdrop-blur-xl"
               onClick={() => setIsSmsBomberModalOpen(false)}
@@ -3770,7 +3770,7 @@ export default function AdminDashboard() {
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="p-6 md:p-8 flex-1 overflow-y-auto custom-scrollbar pb-40">
+              <div className="p-6 md:p-8 flex-1 overflow-y-auto custom-scrollbar pb-60">
                 <h2 className="text-2xl font-semibold tracking-tight text-white mb-6 flex items-center gap-2">
                   <FileCode className="w-6 h-6 text-red-500" />
                   {editingSmsBomber ? "Edit SMS Bomber" : "New SMS Bomber"}
@@ -3966,7 +3966,7 @@ export default function AdminDashboard() {
 
         {/* Chatbot Form Modal */}
         {isChatbotModalOpen && (
-          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 pt-24 sm:pt-4">
+          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-4 overflow-y-auto">
             <div
               className="absolute inset-0 bg-[#050014]/90 backdrop-blur-2xl"
               onClick={() => setIsChatbotModalOpen(false)}
@@ -3979,7 +3979,7 @@ export default function AdminDashboard() {
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="p-6 md:p-8 flex-1 overflow-y-auto no-scrollbar pb-40">
+              <div className="p-6 md:p-8 flex-1 overflow-y-auto no-scrollbar pb-60">
                 <h2 className="text-2xl font-semibold tracking-tight text-white mb-6 flex items-center gap-2">
                   <Brain className="w-6 h-6 text-[#ff2d75]" />
                   {editingChatbot ? "Edit Chatbot" : "New Chatbot"}
@@ -4179,7 +4179,7 @@ export default function AdminDashboard() {
 
         {/* Tool Form Modal */}
         {isModalOpen && (
-          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 pt-24 sm:pt-4">
+          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-4 overflow-y-auto">
             <div
               className="absolute inset-0 bg-[#050014]/90 backdrop-blur-2xl"
               onClick={() => setIsModalOpen(false)}
@@ -4192,7 +4192,7 @@ export default function AdminDashboard() {
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="p-6 md:p-8 flex-1 overflow-y-auto custom-scrollbar pb-40">
+              <div className="p-6 md:p-8 flex-1 overflow-y-auto custom-scrollbar pb-60">
                 <h2 className="text-2xl font-semibold tracking-tight text-white mb-6 flex items-center gap-2">
                   <Plus className="w-6 h-6 text-purple-400" />
                   {editingTool ? "Edit Tool" : "Add New Tool"}
@@ -4627,12 +4627,12 @@ export default function AdminDashboard() {
 
         {/* Settings Modal */}
         {isSettingsOpen && (
-          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 pt-24 sm:pt-4 overflow-y-auto">
+          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-10 overflow-y-auto">
             <div
-              className="fixed inset-0 bg-[#050014]/80 backdrop-blur-xl"
+              className="fixed inset-0 bg-[#050014]/90 backdrop-blur-2xl"
               onClick={() => setIsSettingsOpen(false)}
             ></div>
-            <div className="relative bg-[#0F0A1F]/90 border border-purple-500/30 p-6 md:p-8 w-full max-w-sm shadow-[0_0_50px_rgba(168,85,247,0.15)] rounded-3xl animate-in zoom-in-95 duration-200 mb-40">
+            <div className="relative bg-[#0F0A1F]/90 border border-purple-500/30 p-6 md:p-8 w-full max-w-sm shadow-[0_0_50px_rgba(168,85,247,0.15)] rounded-3xl animate-in zoom-in-95 duration-200 mb-20">
               <button
                 onClick={() => setIsSettingsOpen(false)}
                 className="absolute top-5 right-5 text-zinc-400 hover:text-white p-2 bg-white/5 rounded-full"
@@ -5766,7 +5766,7 @@ export default function AdminDashboard() {
 
         {/* Short Link Modal */}
         {isShortLinkModalOpen && (
-          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 pt-24 sm:pt-4">
+          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-4 overflow-y-auto">
             <div
               className="absolute inset-0 bg-[#050014]/80 backdrop-blur-xl"
               onClick={() => setIsShortLinkModalOpen(false)}
@@ -5781,7 +5781,7 @@ export default function AdminDashboard() {
 
               <form
                 onSubmit={saveShortLink}
-                className="p-6 md:p-8 space-y-6 overflow-y-auto scrollbar-hide pb-40"
+                className="p-6 md:p-8 space-y-6 overflow-y-auto scrollbar-hide pb-60"
               >
                 <h2 className="text-2xl font-semibold tracking-tight text-white mb-6 flex items-center gap-2">
                   <Globe className="w-6 h-6 text-indigo-400" />
@@ -6072,7 +6072,7 @@ export default function AdminDashboard() {
         )}
         {/* Portfolio Modal */}
         {isPortfolioModalOpen && (
-          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 pt-24 sm:pt-4">
+          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-4 overflow-y-auto">
             <div
               className="absolute inset-0 bg-[#050014]/90 backdrop-blur-3xl"
               onClick={() => setIsPortfolioModalOpen(false)}
@@ -6102,7 +6102,7 @@ export default function AdminDashboard() {
 
               <form
                 onSubmit={savePortfolio}
-                className="p-8 space-y-6 overflow-y-auto scrollbar-hide pb-40"
+                className="p-8 space-y-6 overflow-y-auto scrollbar-hide pb-60"
               >
                 {portfolioMessage && (
                   <div
@@ -6434,7 +6434,7 @@ export default function AdminDashboard() {
 
         {/* Data Upload Modal (Step by Step) */}
         {isUploadModalOpen && (
-          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 pt-24 sm:pt-4">
+          <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-32 sm:pt-4 overflow-y-auto">
             <div
               className="absolute inset-0 bg-[#050014]/90 backdrop-blur-xl"
               onClick={() => setIsUploadModalOpen(false)}
@@ -6447,7 +6447,7 @@ export default function AdminDashboard() {
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="p-8 pb-40">
+              <div className="p-8 pb-60">
                 {/* Stepper Header */}
                 <div className="flex items-center justify-between mb-8 px-4">
                   {[1, 2, 3].map((s) => (

@@ -33,6 +33,11 @@ function HomeOrRedirect() {
     return <SkeletonDashboard />;
   }
 
+  // If logged in but no profile yet, show loader instead of redirecting to login
+  if (user && !profile) {
+    return <SkeletonDashboard />;
+  }
+
   // Redirect to their dashboard if logged in and profile loaded
   if (user && profile) {
     return <Navigate to={`/admin/${profile.username}`} replace />;

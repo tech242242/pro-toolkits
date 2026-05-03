@@ -2594,36 +2594,36 @@ export default function AdminDashboard() {
                       key={port.id}
                       className="group bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 rounded-3xl p-5 backdrop-blur-xl transition-all hover:translate-y-[-4px]"
                     >
-                      <div className="flex gap-5">
-                        <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-white/10 shadow-lg">
+                      <div className="flex gap-4 sm:gap-5">
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden shrink-0 border border-white/10 shadow-2xl group-hover:border-emerald-500/50 transition-colors">
                           <img
                             src={port.main_image_url}
                             alt={port.title}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
-                            <h4 className="text-white font-bold truncate pr-2">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <h4 className="text-white font-black text-sm sm:text-base pr-2 truncate group-hover:text-emerald-400 transition-colors">
                               {port.title}
                             </h4>
-                            <span className="text-[10px] uppercase font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-md border border-emerald-400/20">
-                              Active
+                            <span className="shrink-0 text-[9px] sm:text-[10px] uppercase font-black text-emerald-400 bg-emerald-400/10 px-2.5 py-1 rounded-xl border border-emerald-400/20">
+                              Live
                             </span>
                           </div>
-                          <p className="text-zinc-400 text-xs line-clamp-2 mb-3 font-light leading-relaxed">
+                          <p className="text-zinc-400 text-xs line-clamp-2 mb-3 font-normal leading-relaxed opacity-80">
                             {port.description}
                           </p>
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-1.5 text-zinc-400">
-                              <ImageIcon size={12} className="text-zinc-500" />
-                              <span className="text-[10px] font-bold">
-                                {port.gallery_urls.length} Images
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-1.5 text-zinc-500">
+                              <ImageIcon size={14} className="text-emerald-500/60" />
+                              <span className="text-[10px] font-black uppercase tracking-tighter">
+                                {port.gallery_urls.length} Shots
                               </span>
                             </div>
-                            <div className="flex items-center gap-1.5 text-zinc-400">
-                              <Eye size={12} className="text-zinc-500" />
-                              <span className="text-[10px] font-bold">
+                            <div className="flex items-center gap-1.5 text-zinc-500">
+                              <Eye size={14} className="text-indigo-500/60" />
+                              <span className="text-[10px] font-black uppercase tracking-tighter">
                                 {port.views_count} Views
                               </span>
                             </div>
@@ -2634,14 +2634,14 @@ export default function AdminDashboard() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => openPortfolioModal(port)}
-                            className="p-2.5 bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white rounded-xl transition-all border border-white/5"
+                            className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white rounded-xl transition-all border border-white/10 active:scale-90"
                             title="Edit Portfolio"
                           >
                             <Edit size={16} />
                           </button>
                           <button
                             onClick={(e) => deletePortfolio(port.id, e)}
-                            className="p-2.5 bg-white/5 hover:bg-red-500/20 text-zinc-400 hover:text-red-300 rounded-xl transition-all border border-white/5 hover:border-red-500/20"
+                            className="w-10 h-10 flex items-center justify-center bg-red-500/5 hover:bg-red-500/20 text-zinc-500 hover:text-red-400 rounded-xl transition-all border border-white/5 hover:border-red-500/20 active:scale-90"
                             title="Delete Portfolio"
                           >
                             <Trash2 size={16} />
@@ -2654,11 +2654,10 @@ export default function AdminDashboard() {
                               "_blank",
                             )
                           }
-                          className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-xs font-bold transition-all active:scale-95"
+                          className="flex items-center gap-2 px-6 py-2.5 bg-white text-black hover:bg-zinc-200 rounded-xl text-xs font-black transition-all active:scale-95 shadow-lg shadow-white/5"
                         >
-                          <Globe size={14} className="text-emerald-400" />
-                          Open Live
-                          <ExternalLink size={12} className="opacity-50" />
+                          <Globe size={14} />
+                          Open Page
                         </button>
                       </div>
                     </div>
@@ -2755,7 +2754,7 @@ export default function AdminDashboard() {
 
                         {/* Admin Actions Overlay */}
                         {isAuthorized && (
-                          <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                          <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 z-20 duration-300">
                             <button
                               onClick={(e) => {
                                 e.preventDefault();
@@ -2764,23 +2763,25 @@ export default function AdminDashboard() {
                                   "_blank",
                                 );
                               }}
-                              className="p-1.5 bg-black/60 border border-white/10 text-emerald-400 hover:text-emerald-300 rounded-lg backdrop-blur-md"
-                              title="Share Tool"
+                              className="w-8 h-8 flex items-center justify-center bg-white text-black hover:bg-zinc-200 rounded-full shadow-xl transition-all active:scale-90"
+                              title="View Tool"
                             >
-                              <Share2 className="w-3.5 h-3.5" />
+                              <ExternalLink className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={(e) => {
                                 e.preventDefault();
                                 openToolModal(tool);
                               }}
-                              className="p-1.5 bg-black/60 border border-white/10 text-zinc-300 hover:text-purple-300 rounded-lg backdrop-blur-md"
+                              className="w-8 h-8 flex items-center justify-center bg-black/60 border border-white/10 text-white hover:bg-white hover:text-black rounded-full backdrop-blur-md transition-all active:scale-90"
+                              title="Edit Tool"
                             >
                               <Edit className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={(e) => deleteTool(tool.id, e)}
-                              className="p-1.5 bg-black/60 border border-white/10 text-zinc-300 hover:text-red-400 rounded-lg backdrop-blur-md"
+                              className="w-8 h-8 flex items-center justify-center bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white rounded-full backdrop-blur-md transition-all active:scale-90"
+                              title="Delete Tool"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -2788,14 +2789,17 @@ export default function AdminDashboard() {
                         )}
                       </div>
                     </GlowWrapper>
-                    <div className="mt-3 flex flex-col items-center text-center pointer-events-none">
-                      <h3 className="text-sm md:text-[15px] font-bold tracking-tight text-white px-2 line-clamp-1 drop-shadow-md">
+                    <div className="mt-4 flex flex-col items-center text-center pointer-events-none w-full">
+                      <h3 className="text-sm sm:text-[15px] font-black tracking-tight text-white/90 px-2 line-clamp-1 drop-shadow-md">
                         {tool.name}
                       </h3>
                       {tool.category && (
-                        <span className="text-[10px] text-purple-300/70 mt-0.5 uppercase tracking-[0.1em] font-black">
-                          {tool.category}
-                        </span>
+                        <div className="flex items-center gap-1.5 mt-1 opacity-40">
+                           <span className="w-1 h-1 rounded-full bg-purple-500" />
+                           <span className="text-[9px] text-white uppercase tracking-[0.2em] font-black">
+                             {tool.category}
+                           </span>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -3319,50 +3323,42 @@ export default function AdminDashboard() {
               </div>
 
               {/* Mobile Cards View */}
-              <div className="md:hidden space-y-4">
+              <div className="md:hidden space-y-4 pb-20">
                 {shortLinks.map((link) => (
                   <div
                     key={link.id}
-                    className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex flex-col gap-4 shadow-xl"
+                    className="group bg-white/[0.03] active:bg-white/[0.05] border border-white/10 rounded-[2rem] p-5 flex flex-col gap-5 shadow-2xl transition-all"
                   >
                     <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-                          <LinkIcon className="w-5 h-5" />
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+                          <LinkIcon className="w-6 h-6" />
                         </div>
                         <div className="flex flex-col">
                           <div className="flex items-center gap-2">
-                            <span className="text-white font-bold text-base tracking-tight">
+                            <span className="text-white font-black text-lg tracking-tight">
                               {link.slug}
                             </span>
                             {link.is_locked && (
-                              <Lock className="w-3.5 h-3.5 text-amber-500" />
+                              <Lock className="w-4 h-4 text-amber-500" />
                             )}
                           </div>
-                          <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">
-                            Safe Name
+                          <span className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-black">
+                            SAFE SLUG
                           </span>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <a
-                          href={`/${pageProfile.username}/link/${link.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 bg-white/5 border border-white/10 rounded-xl text-zinc-400"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
                         <button
                           onClick={() => openShortLinkModal(link)}
-                          className="p-2 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400"
+                          className="w-10 h-10 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-zinc-400 active:scale-90 transition-all"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={(e) => deleteShortLink(link.id, e)}
-                          className="p-2 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400"
+                          className="w-10 h-10 flex items-center justify-center bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 active:scale-90 transition-all"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -3370,28 +3366,40 @@ export default function AdminDashboard() {
                     </div>
 
                     <div className="space-y-2">
-                      <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold ml-1">
-                        Destination
-                      </p>
-                      <div className="bg-black/30 border border-white/5 rounded-xl p-3 text-[11px] font-mono text-zinc-400 break-all leading-relaxed">
+                      <div className="flex items-center justify-between px-1">
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-black">
+                         Destination
+                        </p>
+                        <a 
+                          href={link.target_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-[10px] text-indigo-400 font-black flex items-center gap-1"
+                        >
+                          VISIT <ExternalLink size={10} />
+                        </a>
+                      </div>
+                      <div className="bg-black/40 border border-white/5 rounded-2xl p-4 text-[11px] font-mono text-zinc-400 break-all leading-relaxed shadow-inner">
                         {link.target_url}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl">
-                      <code className="flex-1 text-[11px] font-mono text-emerald-400">
-                        /{pageProfile.username}/link/{link.slug}
-                      </code>
+                    <div className="flex items-center gap-3 p-4 bg-white/5 border border-white/10 rounded-2xl group/link">
+                      <div className="flex-1 min-w-0">
+                         <p className="text-[9px] uppercase tracking-widest text-zinc-500 font-black mb-1">Public Pointer</p>
+                         <code className="text-xs font-mono text-emerald-400 block truncate">
+                           /{pageProfile.username}/link/{link.slug}
+                         </code>
+                      </div>
                       <button
                         onClick={() =>
                           handleCopyLink(
                             `/${pageProfile.username}/link/${link.slug}`,
                           )
                         }
-                        className="flex items-center gap-2 bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg active:scale-95 transition-all"
+                        className="shrink-0 w-12 h-12 bg-white text-black rounded-xl flex items-center justify-center shadow-lg active:scale-90 transition-all"
                       >
-                        <Copy className="w-3 h-3" />
-                        <span>Copy Link</span>
+                        <Copy className="w-5 h-5" />
                       </button>
                     </div>
                   </div>

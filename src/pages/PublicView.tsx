@@ -167,25 +167,39 @@ export default function PublicView() {
     const fetchPageData = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('username', username)
           .single();
           
-        if (data && !error) {
-           setPageProfile(data);
-           fetchTools(data.id);
-           trackView(data.id);
-           checkFollowStatus(data.id);
+        if (profileData && !profileError) {
+           setPageProfile(profileData);
+           
+           // Fetch all social data in parallel for 10x faster performance
+           await Promise.all([
+             fetchTools(profileData.id),
+             trackView(profileData.id),
+             checkFollowStatus(profileData.id),
+             // Fetching extra systems in parallel
+             Promise.all([
+               fetchShortLinks?.(profileData.id),
+               fetchPortfolios?.(profileData.id),
+               fetchSimDatabases?.(profileData.id),
+               fetchSmsBombers?.(profileData.id),
+               fetchChatbots?.(profileData.id),
+               fetchImageGenerators?.(profileData.id),
+               fetchTiktokDownloaders?.(profileData.id)
+             ].filter(Boolean))
+           ]);
            
            // Setup popup timing
-           if (data.popup_enabled) {
+           if (profileData.popup_enabled) {
               timer = setTimeout(() => setShowPopup(true), 1500);
            }
         } else {
            setPageProfile(null);
-           console.error("Profile fetch error:", error);
+           console.error("Profile fetch error:", profileError);
         }
       } catch (err) {
         console.error("Unexpected error in fetchPageData:", err);

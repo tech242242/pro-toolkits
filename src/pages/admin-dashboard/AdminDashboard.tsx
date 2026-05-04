@@ -475,6 +475,22 @@ export default function AdminDashboard() {
   const [pinError, setPinError] = useState("");
   const [oldPinInput, setOldPinInput] = useState("");
 
+  // PIN Session Logic (15 minute grace period)
+  useEffect(() => {
+    if (user?.id) {
+      const verifiedAt = localStorage.getItem(`pin_verified_${user.id}`);
+      if (verifiedAt) {
+        const lastVerified = parseInt(verifiedAt);
+        const now = Date.now();
+        const diff = now - lastVerified;
+        const fifteenMinutes = 15 * 60 * 1000;
+        if (diff < fifteenMinutes) {
+          setIsPinVerified(true);
+        }
+      }
+    }
+  }, [user?.id]);
+
   const [activeMainTab, setActiveMainTab] = useState<
     "tools" | "shortlinks" | "portfolios" | "uploads" | "custom_tools" | "analytics"
   >("tools");
@@ -1422,6 +1438,9 @@ export default function AdminDashboard() {
   const isAuthorized = isOwner || isAdmin;
 
   const handleSignOut = async () => {
+    if (user?.id) {
+      localStorage.removeItem(`pin_verified_${user.id}`);
+    }
     await supabase.auth.signOut();
     navigate("/login");
   };
@@ -2085,6 +2104,7 @@ export default function AdminDashboard() {
                  if (val.length === 6) {
                    if (val === pageProfile.two_factor_pin) {
                     setIsPinVerified(true);
+                     localStorage.setItem(`pin_verified_${user?.id}`, Date.now().toString());
                     setPinError("");
                    } else {
                     setPinError("Invalid PIN Access Denied.");

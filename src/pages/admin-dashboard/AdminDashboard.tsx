@@ -1714,24 +1714,35 @@ export default function AdminDashboard() {
       });
     } else {
       setEditingTool(null);
-      setToolForm({
-        name: "",
-        slug: "",
-        link_url: "",
-        image_url: "",
-        category: uniqueCategories[0] || "Tools",
-        is_media: false,
-        is_locked: false,
-        password: "",
-        is_gated: false,
-        gate_url: "",
-        gate_text: "Subscribe first to unlock",
-        gate_icon: "youtube",
-        video_urls: [] as string[],
-      });
+      const draft = localStorage.getItem("draft_toolForm");
+      if (draft) {
+        try { setToolForm(JSON.parse(draft)); } catch(e) {}
+      } else {
+        setToolForm({
+          name: "",
+          slug: "",
+          link_url: "",
+          image_url: "",
+          category: uniqueCategories[0] || "Tools",
+          is_media: false,
+          is_locked: false,
+          password: "",
+          is_gated: false,
+          gate_url: "",
+          gate_text: "Subscribe first to unlock",
+          gate_icon: "youtube",
+          video_urls: [] as string[],
+        });
+      }
     }
     setIsModalOpen(true);
   };
+
+  React.useEffect(() => {
+    if (isModalOpen && !editingTool) {
+      localStorage.setItem("draft_toolForm", JSON.stringify(toolForm));
+    }
+  }, [toolForm, isModalOpen, editingTool]);
 
   const saveTool = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1788,6 +1799,7 @@ export default function AdminDashboard() {
         ]);
         if (error) throw error;
       }
+      localStorage.removeItem("draft_toolForm");
       setIsModalOpen(false);
       fetchTools(pageProfile.id);
     } catch (err: any) {

@@ -1896,38 +1896,42 @@ export default function AdminDashboard() {
       }
 
       let profileUpdates: any = {
-          username: desiredUsername,
-          social_facebook: settingsForm.social_facebook,
-          social_youtube: settingsForm.social_youtube,
-          social_whatsapp: settingsForm.social_whatsapp,
-          social_github: settingsForm.social_github,
-          social_telegram: settingsForm.social_telegram,
-          social_instagram: settingsForm.social_instagram,
-          social_twitter: settingsForm.social_twitter,
-          social_tiktok: settingsForm.social_tiktok,
-          description: settingsForm.description,
-          phone_number: settingsForm.phone_number,
-          popup_enabled: settingsForm.popup_enabled,
-          popup_title: settingsForm.popup_title,
-          popup_description: settingsForm.popup_description,
-          popup_link: settingsForm.popup_link,
-          popup_button_text: settingsForm.popup_button_text,
-          popup_icon: settingsForm.popup_icon,
-          popup_border_style: settingsForm.popup_border_style,
-          theme_profile_border: settingsForm.theme_profile_border,
-          theme_search_border: settingsForm.theme_search_border,
-          theme_social_border: settingsForm.theme_social_border,
-          theme_buttons_border: settingsForm.theme_buttons_border,
-          theme_color_combo: settingsForm.theme_color_combo,
-          theme_font_family: settingsForm.theme_font_family,
-          theme_text_color: settingsForm.theme_text_color,
-          theme_username_color: settingsForm.theme_username_color,
-          bg_color: settingsForm.bg_color,
-          bg_image_url: settingsForm.bg_image_url,
-          bg_gradient: settingsForm.bg_gradient,
-          two_factor_enabled: settingsForm.two_factor_enabled,
-          two_factor_pin: settingsForm.two_factor_pin,
+        social_facebook: settingsForm.social_facebook,
+        social_youtube: settingsForm.social_youtube,
+        social_whatsapp: settingsForm.social_whatsapp,
+        social_github: settingsForm.social_github,
+        social_telegram: settingsForm.social_telegram,
+        social_instagram: settingsForm.social_instagram,
+        social_twitter: settingsForm.social_twitter,
+        social_tiktok: settingsForm.social_tiktok,
+        description: settingsForm.description,
+        phone_number: settingsForm.phone_number,
+        popup_enabled: settingsForm.popup_enabled,
+        popup_title: settingsForm.popup_title,
+        popup_description: settingsForm.popup_description,
+        popup_link: settingsForm.popup_link,
+        popup_button_text: settingsForm.popup_button_text,
+        popup_icon: settingsForm.popup_icon,
+        popup_border_style: settingsForm.popup_border_style,
+        theme_profile_border: settingsForm.theme_profile_border,
+        theme_search_border: settingsForm.theme_search_border,
+        theme_social_border: settingsForm.theme_social_border,
+        theme_buttons_border: settingsForm.theme_buttons_border,
+        theme_color_combo: settingsForm.theme_color_combo,
+        theme_font_family: settingsForm.theme_font_family,
+        theme_text_color: settingsForm.theme_text_color,
+        theme_username_color: settingsForm.theme_username_color,
+        bg_color: settingsForm.bg_color,
+        bg_image_url: settingsForm.bg_image_url,
+        bg_gradient: settingsForm.bg_gradient,
+        two_factor_enabled: settingsForm.two_factor_enabled,
+        two_factor_pin: settingsForm.two_factor_pin || null,
       };
+
+      // Only update username if it's actually different
+      if (desiredUsername && desiredUsername !== pageProfile.username) {
+        profileUpdates.username = desiredUsername;
+      }
 
       if (settingsForm.password) {
         profileUpdates.saved_password = settingsForm.password;
@@ -1938,7 +1942,12 @@ export default function AdminDashboard() {
         .update(profileUpdates)
         .eq("id", user?.id!);
 
-      if (profileError) throw new Error("Username already taken or invalid");
+      if (profileError) {
+        if (profileError.code === "23505") {
+          throw new Error("Username already taken. Please choose another one.");
+        }
+        throw new Error(`Profile Update: ${profileError.message}`);
+      }
 
       if (desiredUsername && desiredUsername !== pageProfile.username) {
         await refreshProfile();
@@ -2238,7 +2247,10 @@ export default function AdminDashboard() {
               </a>
 
               <button
-                onClick={() => window.open(`/${pageProfile.username}`, "_blank")}
+                onClick={() => {
+                  const win = window.open(`/${pageProfile.username}`, "_blank");
+                  if (win) win.focus();
+                }}
                 className="flex items-center justify-center p-2.5 sm:px-3 sm:py-2 rounded-xl bg-white/5 border border-white/10 hover:border-purple-400/50 text-zinc-300 hover:text-white transition-all text-xs font-bold active:scale-95 sm:flex sm:items-center sm:gap-2"
               >
                 <Globe className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
@@ -2410,9 +2422,10 @@ export default function AdminDashboard() {
           {isOwner && (
             <div className="flex flex-wrap sm:flex-nowrap gap-2 md:gap-4 items-center w-full md:w-auto mt-4 md:mt-0 px-1">
               <button
-                onClick={() =>
-                  window.open(`/${pageProfile.username}`, "_blank")
-                }
+                onClick={() => {
+                  const win = window.open(`/${pageProfile.username}`, "_blank");
+                  if (win) win.focus();
+                }}
                 className="flex-1 sm:flex-none justify-center px-4 py-3 rounded-xl bg-emerald-600/20 border border-emerald-500/40 hover:bg-emerald-600/30 hover:border-emerald-500 text-emerald-400 backdrop-blur-md transition-all shadow-xl flex items-center gap-2"
                 title="Launch Public Page"
               >
@@ -2648,12 +2661,13 @@ export default function AdminDashboard() {
                           </button>
                         </div>
                         <button
-                          onClick={() =>
-                            window.open(
+                          onClick={() => {
+                            const win = window.open(
                               `/${pageProfile.username}/wb/${port.slug}`,
                               "_blank",
-                            )
-                          }
+                            );
+                            if (win) win.focus();
+                          }}
                           className="flex items-center gap-2 px-6 py-2.5 bg-white text-black hover:bg-zinc-200 rounded-xl text-xs font-black transition-all active:scale-95 shadow-lg shadow-white/5"
                         >
                           <Globe size={14} />
@@ -2758,10 +2772,11 @@ export default function AdminDashboard() {
                             <button
                               onClick={(e) => {
                                 e.preventDefault();
-                                window.open(
+                                const win = window.open(
                                   `/${pageProfile.username}/${tool.slug || tool.name.toLowerCase().replace(/[^a-z0-9_-]/g, "")}`,
                                   "_blank",
                                 );
+                                if (win) win.focus();
                               }}
                               className="w-8 h-8 flex items-center justify-center bg-white text-black hover:bg-zinc-200 rounded-full shadow-xl transition-all active:scale-90"
                               title="View Tool"

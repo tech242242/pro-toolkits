@@ -160,7 +160,8 @@ export default function MediaDownload() {
          if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
              targetUrl = `https://${targetUrl}`;
          }
-         window.open(targetUrl, '_blank', 'noopener,noreferrer');
+         const win = window.open(targetUrl, '_blank', 'noopener,noreferrer');
+         if (win) win.focus();
          return;
      }
 

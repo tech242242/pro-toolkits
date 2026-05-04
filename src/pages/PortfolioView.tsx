@@ -269,12 +269,6 @@ export default function PortfolioView() {
                 >
                   <MessageSquare size={18} /> Message Me
                 </button>
-                <button 
-                   onClick={() => window.location.href = `/${username}`}
-                  className="bg-white text-gray-900 border border-black/5 px-6 py-3 rounded-2xl font-semibold flex items-center gap-2 shadow-sm active:scale-95 transition-all"
-                >
-                  <Info size={18} /> About Saqib
-                </button>
               </div>
 
               {portfolio.quote && (
